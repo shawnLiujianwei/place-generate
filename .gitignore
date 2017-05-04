@@ -1,0 +1,11 @@
+# Created by .ignore support plugin (hsz.mobi)
+/node_modules
+/npm-debug.log
+/config
+/tmp
+/.eslintcache
+/.idea
+/.vscode
+/json/*.json
+*.log
+test/index.test.js

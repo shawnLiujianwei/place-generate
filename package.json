@@ -1,5 +1,5 @@
 {
-  "name": "place-generate",
+  "name": "place-generator",
   "version": "1.0.1",
   "description": "construct store that ready to insert into mongodb from google",
   "keywords": [
@@ -15,11 +15,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:shawnLiujianwei/place-generate.git"
+    "url": "git+ssh://git@github.com:shawnLiujianwei/place-generator.git"
   },
   "author": "Shawn Liu",
   "license": "MIT",
-  "homepage": "https://github.com/shawnLiujianwei/place-generate.git#readme",
+  "homepage": "https://github.com/shawnLiujianwei/place-generator.git#readme",
   "dependencies": {
     "bluebird": "^3.5.0",
     "crypto-sha1": "^0.1.0",

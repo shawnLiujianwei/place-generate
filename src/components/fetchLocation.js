@@ -47,9 +47,12 @@ module.exports = async (address, retryTimes) => {
     let error = null;
     for (let i = 0; i < times; i++) {
         try {
-            return await getLocation(address);
+            const location = await getLocation(address);
+            return {
+                data: location
+            }
         } catch (e) {
-            logger.error(e);
+
             if (e && e.statusCode === 400) {
                 error = {
                     message: JSON.parse(e.response.body).error_message
@@ -60,5 +63,8 @@ module.exports = async (address, retryTimes) => {
             await Promise.delay(Math.random() * 100);
         }
     }
-    throw error;
+    logger.error(error);
+    return {
+        error
+    }
 };

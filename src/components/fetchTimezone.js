@@ -22,7 +22,7 @@ async function getTimezone(geoLocation) {
         logger.info(`Using timezone cache:`, geoLocation);
         return cacheData;
     }
-    logger.info(`Fetching timezone: ${geoLocation}`);
+    logger.info(`Fetching timezone: `, geoLocation);
     const scraped = await http.get(apiURL.timezone(), {
         qs: {
             location: `${geoLocation.lat},${geoLocation.lng}`,
@@ -45,12 +45,15 @@ module.exports = async (location, retryTimes) => {
     let error = null;
     for (let i = 0; i < (retryTimes || 2); i++) {
         try {
-            return await getTimezone({
+            const timezone = await getTimezone({
                 lat: location.lat,
                 lng: location.lng
             });
+            return {
+                data: timezone
+            }
         } catch (e) {
-            logger.error(e);
+
             if (e && e.statusCode === 400) {
                 error = {
                     message: JSON.parse(e.response.body).error_message
@@ -61,5 +64,8 @@ module.exports = async (location, retryTimes) => {
             await Promise.delay(Math.random() * 100);
         }
     }
-    throw error;
+    logger.error(error);
+    return {
+        error
+    }
 };

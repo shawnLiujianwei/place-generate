@@ -49,24 +49,45 @@ module.exports = async (addressOrLocation, retailer, locale, options) => {
         const cacheKey = typeof addressOrLocation === 'object' ? `storeJSON_${addressOrLocation.toString()}`
             : `storeJSON_${addressOrLocation}`;
         const cacheStore = await cache.getItem(cacheKey);
-        if (cacheStore) {
-            return cacheStore;
-        }
+        // if (cacheStore) {
+        //     return cacheStore;
+        // }
         let location = null;
+        let response = null;
         if (typeof addressOrLocation === 'string') {
-            location = await fetchLocation(addressOrLocation);
+            response = await fetchLocation(addressOrLocation);
+            if (response.error) {
+                return response;
+            }
+            location = response.data;
         } else if (typeof  addressOrLocation === 'object') {
             if (!addressOrLocation.lat || !addressOrLocation.lng) {
                 throw new Error('lat&lng are both required when use location to decode one store');
             }
+            location = addressOrLocation;
         }
-        const placeId = await fetchPlaceId(retailer, location, options.type);
-        const placeDetails = await fetchPlaceDetails(placeId, locale);
-        const timezone = await fetchTimezone(location);
+        const result = {};
+        response = await fetchPlaceId(retailer, location, options.type);
+        if (response.error) {
+            return response;
+        }
+        const placeId = response.data;
+        response = await fetchPlaceDetails(placeId, locale);
+        if (response.error) {
+            return response;
+        }
+        const placeDetails = response.data;
+        response = await fetchTimezone(location);
+        if (response.error) {
+            return response;
+        }
+        const timezone = response.data;
         const store = formatStore(placeDetails, locale, retailer);
         store.timezone = timezone;
         await cache.setItem(cacheKey, store);
-        return store;
+        return {
+            data: store
+        };
     } catch (e) {
         console.error(e);
         return null;

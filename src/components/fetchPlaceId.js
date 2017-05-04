@@ -16,8 +16,8 @@ function parsePlaceId(res) {
  * @returns {*}
  */
 async function getPlaceId(name, location, type) {
-    if (!location) {
-        return Promise.reject(new Error('No location'));
+    if (!name || !location) {
+        return Promise.reject(new Error('name and location are both required to fetch place id'));
     }
     const {cache, config} = global;
     const cacheKey = `placeId-${name}-${JSON.stringify(location)}`;
@@ -26,7 +26,7 @@ async function getPlaceId(name, location, type) {
         logger.info(`Using placeId cache: '${location}'`);
         return cacheData;
     }
-    logger.info(`Fetching placeId by name and location: ${name} - ${location}`);
+    logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
     const query = {
         location: `${location.lat},${location.lng}`,
         name,
@@ -58,11 +58,13 @@ async function getPlaceId(name, location, type) {
 
 module.exports = async (name, location, type, retryTimes) => {
     let error = null;
-    for (let i = 0; i < (retryTimes || 2); i--) {
+    for (let i = 0; i < (retryTimes || 2); i++) {
         try {
-            return await  getPlaceId(name, location, type);
+            const placeId = await  getPlaceId(name, location, type);
+            return {
+                data: placeId
+            }
         } catch (e) {
-            logger.error(e);
             if (e && e.statusCode === 400) {
                 error = {
                     message: JSON.parse(e.response.body).error_message
@@ -73,5 +75,8 @@ module.exports = async (name, location, type, retryTimes) => {
             await Promise.delay(Math.random() * 100);
         }
     }
-    throw error;
+    logger.error(error);
+    return {
+        error
+    };
 };

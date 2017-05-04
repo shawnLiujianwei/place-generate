@@ -31,13 +31,13 @@ async function getDetails(placeId, locale) {
             qs: query
         })
         .then(JSON.parse);
-    logger.info(`Fetched details: `, scraped);
+    logger.info(`Fetched details: `, scraped.result);
     if (scraped && scraped.error_message) {
         throw new Error(scraped.error_message);
     } else if (!scraped) {
         throw new Error('Got no response from google API');
     }
-        await cache.setItem(cacheKey, scraped);
+    await cache.setItem(cacheKey, scraped);
     return scraped;
 }
 
@@ -46,9 +46,12 @@ module.exports = async (placeId, locale, retryTimes) => {
     let error = null;
     for (let i = 0; i < times; i++) {
         try {
-            return await getDetails(placeId, locale);
+            const details = await getDetails(placeId, locale);
+            return {
+                data: details
+            }
         } catch (e) {
-            logger.error(e);
+
             if (e && e.statusCode === 400) {
                 error = {
                     message: JSON.parse(e.response.body).error_message
@@ -59,5 +62,8 @@ module.exports = async (placeId, locale, retryTimes) => {
             await Promise.delay(Math.random() * 100);
         }
     }
-    throw error;
+    logger.error(error);
+    return {
+        error
+    }
 };

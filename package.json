@@ -1,6 +1,6 @@
 {
   "name": "place-generator",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "construct store that ready to insert into mongodb from google",
   "keywords": [
     "google",

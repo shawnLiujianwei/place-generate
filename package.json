@@ -1,5 +1,5 @@
 {
-  "name": "construct-store-from-google",
+  "name": "place-generate",
   "version": "1.0.1",
   "description": "construct store that ready to insert into mongodb from google",
   "keywords": [
@@ -15,11 +15,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/dotterme/construct-store-from-google.git"
+    "url": "git+ssh://git@github.com:shawnLiujianwei/place-generate.git"
   },
-  "author": "Dotter",
-  "license": "ISC",
-  "homepage": "https://bitbucket.org/dotterme/construct-store-from-google#readme",
+  "author": "Shawn Liu",
+  "license": "MIT",
+  "homepage": "https://github.com/shawnLiujianwei/place-generate.git#readme",
   "dependencies": {
     "bluebird": "^3.5.0",
     "crypto-sha1": "^0.1.0",

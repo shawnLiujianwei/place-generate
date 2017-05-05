@@ -121,7 +121,10 @@ Generator.prototype.getPlaceId = async function (retailerId, placeTypes) {
     }
     if (response.data ||
         response.error.message.indexOf('No results') !== -1) {
-        self.placeId = response;
+        self.placeId = {
+            data: null,
+            message: response.error ? response.error.message : 'OK'
+        };
     }
     return response;
 }

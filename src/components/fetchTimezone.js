@@ -43,7 +43,7 @@ async function getTimezone(geoLocation) {
 
 module.exports = async (location, retryTimes) => {
     let error = null;
-    for (let i = 0; i < (retryTimes || 2); i++) {
+    for (let i = 0; i < (retryTimes || 1); i++) {
         try {
             const timezone = await getTimezone({
                 lat: location.lat,

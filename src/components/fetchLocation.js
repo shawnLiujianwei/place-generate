@@ -43,7 +43,7 @@ async function getLocation(address) {
 }
 
 module.exports = async (address, retryTimes) => {
-    const times = retryTimes || 2;
+    const times = retryTimes || 1;
     let error = null;
     for (let i = 0; i < times; i++) {
         try {

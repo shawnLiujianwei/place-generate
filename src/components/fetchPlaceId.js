@@ -48,17 +48,17 @@ async function getPlaceId(name, location, type) {
     })
         .then(JSON.parse);
     const placeId = parsePlaceId(res);
-    logger.info(`Fetched placeId :`, placeId);
+    // logger.info(`Fetched placeId :`, placeId);
     if (placeId) {
         await cache.setItem(cacheKey, placeId);
         return placeId;
     }
-    throw new Error(`Failed to get placeId by 'name: ${name}, location: ${location}'`);
+    throw new Error(`No results from google nearbysearch with name=${name} type=${query.type || query.types}, location=${JSON.stringify(location)}`);
 }
 
 module.exports = async (name, location, type, retryTimes) => {
     let error = null;
-    for (let i = 0; i < (retryTimes || 2); i++) {
+    for (let i = 0; i < (retryTimes || 1); i++) {
         try {
             const placeId = await  getPlaceId(name, location, type);
             return {
@@ -75,7 +75,6 @@ module.exports = async (name, location, type, retryTimes) => {
             await Promise.delay(Math.random() * 100);
         }
     }
-    logger.error(error);
     return {
         error
     };

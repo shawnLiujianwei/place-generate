@@ -31,11 +31,40 @@ const defaultOption = {
     gcacheURL: 'https://gcache.evan.dotter.me'
 };
 
-module.exports = async (addressOrLocation, retailer, locale, options) => {
-    try {
-        logger.info(`Processing: ${locale} - ${retailer}:`, addressOrLocation)
-        checkOptions(options);
+// function formatStore(scraped) {
+//     if (scraped.result) {
+//         const scrapedResult = scraped.result;
+//         const geometry = scrapedResult.geometry;
+//         const openingHours = scrapedResult.opening_hours || {};
+//         return {
+//             placeId: scrapedResult.place_id,
+//             type: scrapedResult.types,
+//             location: {
+//                 type: 'Point',
+//                 coordinates: [geometry.location.lng, geometry.location.lat]
+//             },
+//             summary: {
+//                 name: scrapedResult.name,
+//                 address: scrapedResult.formatted_address || '',
+//                 phone: scrapedResult.formatted_phone_number || '',
+//                 internationalPhone: scrapedResult.international_phone_number || '',
+//                 weekdayText: openingHours.weekday_text || []
+//             },
+//             openingHourPeriods: openingHours.periods || [],
+//             updateDate: new Date(),
+//         };
+//     }
+//     return null;
+// }
 
+
+const Generator = function (addressOrLocation, options, timezoneId) {
+    this.init = function () {
+        if (!addressOrLocation) {
+            throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
+        }
+        const self = this;
+        checkOptions(options);
         if (!options.redis) {
             console.info('Will use default redis configuration:', defaultOption.redis);
         } else {
@@ -45,52 +74,118 @@ module.exports = async (addressOrLocation, retailer, locale, options) => {
         if (!global.cache) {
             global.cache = new RedisCache(global.config.redis);
         }
-        const cache = global.cache;
-        const cacheKey = typeof addressOrLocation === 'object' ? `storeJSON_${addressOrLocation.toString()}`
-            : `storeJSON_${addressOrLocation}`;
-        const cacheStore = await cache.getItem(cacheKey);
-        // if (cacheStore) {
-        //     return cacheStore;
-        // }
-        let location = null;
-        let response = null;
         if (typeof addressOrLocation === 'string') {
-            response = await fetchLocation(addressOrLocation);
-            if (response.error) {
-                return response;
+            self.address = addressOrLocation
+        } else {
+            self.location = {
+                data: addressOrLocation
+            }; //{lat:xxx, lng:xxxx}
+        }
+        if (timezoneId) {
+            self.timezone = {
+                data: {
+                    timeZoneId: timezoneId
+                }
             }
-            location = response.data;
-        } else if (typeof  addressOrLocation === 'object') {
-            if (!addressOrLocation.lat || !addressOrLocation.lng) {
-                throw new Error('lat&lng are both required when use location to decode one store');
-            }
-            location = addressOrLocation;
         }
-        const result = {};
-        response = await fetchPlaceId(retailer, location, options.type);
-        if (response.error) {
-            return response;
-        }
-        const placeId = response.data;
-        response = await fetchPlaceDetails(placeId, locale);
-        if (response.error) {
-            return response;
-        }
-        const placeDetails = response.data;
-        response = await fetchTimezone(location);
-        if (response.error) {
-            return response;
-        }
-        const timezone = response.data;
-        const store = formatStore(placeDetails, locale, retailer);
-        store.timezone = timezone;
-        await cache.setItem(cacheKey, store);
-        return {
-            data: store
-        };
-    } catch (e) {
-        console.error(e);
-        return null;
+
     }
+    this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
+    this.init();
+    this.locale = 'en_gb';
+}
+
+Generator.prototype.getLocation = async function () {
+    const self = this;
+    if (self.location) {
+        return self.location;
+    }
+    const response = await fetchLocation(self.address);
+    if (response.data || (response.error.message.indexOf('No results from geocode api'))) {
+        self.location = response;
+    }
+    return response;
+}
+
+Generator.prototype.getPlaceId = async function (retailerId, placeTypes) {
+    if (!retailerId) {
+        throw new Error('retailerId is required required when try to get placeId');
+    }
+    const self = this;
+    if (self.placeId) {
+        return self.placeId;
+    }
+    let response = await self.getLocation();
+    if (response.data) {
+        response = await fetchPlaceId(retailerId, response.data, placeTypes || self.defaultPlaceTypes);
+    }
+    if (response.data ||
+        response.error.message.indexOf('No results') !== -1) {
+        self.placeId = response;
+    }
+    return response;
+}
+
+Generator.prototype.getPlaceDetails = async function (retailerId, locale, placeTypes) {
+    const self = this;
+    if (self.placeDetails) {
+        return self.placeDetails;
+    }
+    let response = await self.getPlaceId(retailerId, placeTypes);
+    if (response.data) {
+        response = await fetchPlaceDetails(response.data, locale);
+    }
+    if (response.data) {
+        self.placeDetails = response;
+    }
+    return response;
+}
+
+Generator.prototype.getTimezone = async function () {
+    const self = this;
+    if (self.timezone) {
+        return self.timezone;
+    }
+    let response = await self.getLocation();
+    if (response.data) {
+        response = await fetchTimezone(response.data);
+    }
+    if (response.data) {
+        self.timezone = response;
+    }
+    return response;
+}
+
+
+/**
+ *
+ * @param queryName , required. can be retailer id or something else
+ * @param placeTypes , optional. default is 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
+ * @returns {Promise.<void>}
+ */
+Generator.prototype.getFullPlace = async function (retailerId, locale, placeTypes, timezoneId) {
+    const self = this;
+    if (self.store) {
+        return self.store;
+    }
+    const response = await self.getPlaceDetails(retailerId, locale, placeTypes);
+    if (response.data) {
+        const formatS = await formatStore(response.data, retailerId, locale);
+        if (formatS.error) {
+            return {
+                error: formatS.error
+            };
+        }
+        const timezone = await self.getTimezone();
+        if (timezone.data) {
+            formatS.timezone = timezone.data;
+        }
+        self.store = {
+            data: Object.assign({}, formatS)
+        };
+    }
+    return Object.assign(response, self.store);
 
 }
+
+module.exports = Generator;

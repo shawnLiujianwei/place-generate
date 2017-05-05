@@ -1,7 +1,7 @@
 /**
  * Created by Shawn Liu on 17/4/19.
  */
-module.exports = (scraped, locale, retailer1) => {
+module.exports = (scraped, retailer1, locale) => {
     if (!scraped || !scraped.result || !locale || !retailer1) {
         throw new Error('scrapedResult,locale, retailer are all required when format the store');
     }

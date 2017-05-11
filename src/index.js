@@ -17,6 +17,16 @@ const checkOptions = (options) => {
     if (!options.googleAPIKey) {
         throw new Error('googleAPIKey is required');
     }
+
+    if (!options.retailerId) {
+        throw new DateError('retailer id is required');
+    }
+    // if (!options.placeQuery) {
+    //     throw new Error('placeQuery  is required');
+    // }
+    // if (!options.locale) {
+    //     throw new Error('Place locale is required');
+    // }
 }
 
 const defaultOption = {
@@ -31,31 +41,6 @@ const defaultOption = {
     gcacheURL: 'https://gcache.evan.dotter.me'
 };
 
-// function formatStore(scraped) {
-//     if (scraped.result) {
-//         const scrapedResult = scraped.result;
-//         const geometry = scrapedResult.geometry;
-//         const openingHours = scrapedResult.opening_hours || {};
-//         return {
-//             placeId: scrapedResult.place_id,
-//             type: scrapedResult.types,
-//             location: {
-//                 type: 'Point',
-//                 coordinates: [geometry.location.lng, geometry.location.lat]
-//             },
-//             summary: {
-//                 name: scrapedResult.name,
-//                 address: scrapedResult.formatted_address || '',
-//                 phone: scrapedResult.formatted_phone_number || '',
-//                 internationalPhone: scrapedResult.international_phone_number || '',
-//                 weekdayText: openingHours.weekday_text || []
-//             },
-//             openingHourPeriods: openingHours.periods || [],
-//             updateDate: new Date(),
-//         };
-//     }
-//     return null;
-// }
 
 /**
  *
@@ -77,6 +62,10 @@ const Generator = function (addressOrLocation, options, timezoneId) {
             options.redis = Object.assign({}, defaultOption.redis, options.redis);
         }
         global.config = Object.assign({}, defaultOption, options);
+        self.placeQuery = global.config.placeQuery;
+        self.locale = global.config.locale;
+        self.retailerId = global.config.retailerId;
+        self.placeTypes = global.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
         if (!global.cache) {
             global.cache = new RedisCache(global.config.redis);
         }
@@ -113,21 +102,21 @@ Generator.prototype.getLocation = async function () {
     return response;
 }
 
-Generator.prototype.getPlaceId = async function (retailerId, placeTypes) {
-    if (!retailerId) {
-        throw new Error('retailerId is required required when try to get placeId');
-    }
+Generator.prototype.getPlaceId = async function () {
     const self = this;
     if (self.placeId) {
         return self.placeId;
     }
+    if (!self.placeQuery) {
+        throw new DateError('place name is required when try to get place');
+    }
     let response = await self.getLocation();
     if (response.data) {
-        response = await fetchPlaceId(retailerId, response.data, placeTypes || self.defaultPlaceTypes);
+        response = await fetchPlaceId(self.placeQuery, response.data, self.placeTypes);
     }
-    if (response.data ||
+    if (response.error &&
         response.error.message.indexOf('No results') !== -1) {
-        self.placeId = {
+        self.placeId = response = {
             data: null,
             message: response.error ? response.error.message : 'OK'
         };
@@ -135,14 +124,14 @@ Generator.prototype.getPlaceId = async function (retailerId, placeTypes) {
     return response;
 }
 
-Generator.prototype.getPlaceDetails = async function (retailerId, locale, placeTypes) {
+Generator.prototype.getPlaceDetails = async function () {
     const self = this;
     if (self.placeDetails) {
         return self.placeDetails;
     }
-    let response = await self.getPlaceId(retailerId, placeTypes);
+    let response = await self.getPlaceId();
     if (response.data) {
-        response = await fetchPlaceDetails(response.data, locale);
+        response = await fetchPlaceDetails(response.data, self.locale);
     }
     if (response.data) {
         self.placeDetails = response;
@@ -172,23 +161,31 @@ Generator.prototype.getTimezone = async function () {
  * @param placeTypes , optional. default is 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
  * @returns {Promise.<void>}
  */
-Generator.prototype.getFullPlace = async function (retailerId, locale, placeTypes, timezoneId) {
+Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     const self = this;
     if (self.store) {
         return self.store;
     }
-    const response = await self.getPlaceDetails(retailerId, locale, placeTypes);
+    const response = await self.getPlaceDetails();
     if (response.data) {
-        const formatS = await formatStore(response.data, retailerId, locale);
+        const formatS = await formatStore(response.data, self.retailerId, self.locale);
         if (formatS.error) {
             return {
                 error: formatS.error
             };
         }
-        const timezone = await self.getTimezone();
-        if (timezone.data) {
-            formatS.timezone = timezone.data;
+        if (timezoneId) {
+            formatS.timezone = {
+                timeZoneId: timezoneId
+            }
+        } else {
+            const timezone = await self.getTimezone();
+            if (timezone.data) {
+                formatS.timezone = timezone.data;
+            }
         }
+
+        formatS.retailer = retailerId || 'independent';
         self.store = {
             data: Object.assign({}, formatS)
         };

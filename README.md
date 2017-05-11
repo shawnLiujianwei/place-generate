@@ -11,23 +11,32 @@ const GoogleStore = require('../src/index');
 
 (async () => {
     try {
-        const address = 'Homebase Ltd, 345 High Rd, Harrow HA3 6HF, United Kingdom';
-        const googleStore = new GoogleStore(address);
-        let response = await googleStore.getLocation();
-        console.log('location::------', response.data);
-        response = await googleStore.getPlaceId('argos.co.uk');
-        console.log('placeId::------', response.data);
-        response = await googleStore.getPlaceDetails('argos.co.uk','en_gb');
-        console.log('placeDetails::------',response.data);
-        response = await googleStore.getTimezone();
-        console.log('timezone::------', response.data);
-        response = await googleStore.getFullPlace('argos.co.uk', 'en_gb');
-        console.log('store::------', response.data);
-        process.exit(1);
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
-    }
+            const address = 'Homebase Ltd, 345 High Rd, Harrow HA3 6HF, United Kingdom';
+            const location = {
+                lat: 51.6064929,
+                lng: -0.3391241
+            }
+            const googleStore = new constructStore(address, {
+                googleAPIKey: 'xxxxxx',
+                placeQuery: 'argos',
+                retailerId: 'argos.co.uk',
+                locale: 'en_gb'
+            });
+            let response = await googleStore.getLocation();
+            console.log('location::------', response.data);
+            response = await googleStore.getPlaceId();
+            console.log('placeId::------', response.data);
+            response = await googleStore.getPlaceDetails();
+            console.log('placeDetails::------', response.data);
+            response = await googleStore.getTimezone();
+            console.log('timezone::------', response.data);
+            response = await googleStore.getFullPlace();
+            console.log('store::------', JSON.stringify(response.data));
+            process.exit(1);
+        } catch (e) {
+            console.error(e);
+            process.exit(1);
+        }
 
 })()
 ````

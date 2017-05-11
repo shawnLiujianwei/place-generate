@@ -36,7 +36,7 @@ async function getTimezone(geoLocation) {
     } else if (!scraped) {
         throw new Error('Got no response from google API');
     }
-    logger.info(`Fetched timezone: `, scraped);
+    logger.info(`Fetched timezone: `, scraped.timeZoneId);
     await cache.setItem(cacheKey, scraped);
     return scraped;
 }

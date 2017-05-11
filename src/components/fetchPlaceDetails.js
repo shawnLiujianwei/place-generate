@@ -25,7 +25,7 @@ async function getDetails(placeId, locale) {
         logger.info(`Using details cache: ${placeId}`);
         return cacheData;
     }
-    logger.info(`Fetching details: ${placeId}`);
+    // logger.info(`Fetching details: ${placeId}`);
     const scraped = await http.get(apiURL.details(),
         {
             qs: query

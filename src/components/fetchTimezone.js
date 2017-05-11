@@ -22,7 +22,7 @@ async function getTimezone(geoLocation) {
         logger.info(`Using timezone cache:`, geoLocation);
         return cacheData;
     }
-    logger.info(`Fetching timezone: `, geoLocation);
+    // logger.info(`Fetching timezone: `, geoLocation);
     const scraped = await http.get(apiURL.timezone(), {
         qs: {
             location: `${geoLocation.lat},${geoLocation.lng}`,

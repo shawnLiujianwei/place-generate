@@ -26,7 +26,7 @@ async function getPlaceId(name, location, type, radius) {
         logger.info(`Using placeId cache: '${location}'`);
         return cacheData;
     }
-    logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
+    // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
     const query = {
         location: `${location.lat},${location.lng}`,
         name,

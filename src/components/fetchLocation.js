@@ -24,7 +24,7 @@ async function getLocation(address) {
         logger.info(`Using location cache: ${address}`);
         return cacheData;
     }
-    logger.info(`Fetching  location for: '${address}'`);
+    // logger.info(`Fetching  location for: '${address}'`);
     const jsonResponse = await http.get(apiURL.location(), {
         qs: {
             address: address,

@@ -7,8 +7,8 @@ bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 const sha1 = require('crypto-sha1');
 
-const RedisCache = function (options) {// arrow function can not be used as constructor
-    this.client = redis.createClient(options);
+const RedisCache = function (client, options) {// arrow function can not be used as constructor
+    this.client = client || redis.createClient(options);
     this.options = options;
 }
 

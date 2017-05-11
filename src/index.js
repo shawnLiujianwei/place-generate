@@ -38,6 +38,7 @@ const defaultOption = {
         namespace: 'construct-store-by-google-redis-cache',
         expire: 604800 // 7 days
     },
+    redisClient: null,
     googleAPIKey: '',
     gcacheURL: 'https://gcache.evan.dotter.me'
 };
@@ -57,11 +58,7 @@ const Generator = function (addressOrLocation, options, timezoneId) {
         }
         const self = this;
         checkOptions(options);
-        if (!options.redis) {
-            console.info('Will use default redis configuration:', defaultOption.redis);
-        } else {
-            options.redis = Object.assign({}, defaultOption.redis, options.redis);
-        }
+
         global.config = Object.assign({}, defaultOption, options);
         self.placeQuery = global.config.placeQuery;
         self.locale = global.config.locale;
@@ -69,7 +66,12 @@ const Generator = function (addressOrLocation, options, timezoneId) {
         self.queryRadius = global.config.queryRadius;
         self.placeTypes = global.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
         if (!global.cache) {
-            global.cache = new RedisCache(global.config.redis);
+            if (!options.redis) {
+                console.info('Will use default redis configuration:', defaultOption.redis);
+            } else {
+                options.redis = Object.assign({}, defaultOption.redis, options.redis);
+            }
+            global.cache = new RedisCache(global.config.redisClient, global.config.redis);
         }
         if (typeof addressOrLocation === 'string') {
             self.address = addressOrLocation

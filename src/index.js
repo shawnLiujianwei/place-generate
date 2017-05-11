@@ -92,7 +92,7 @@ const Generator = function (addressOrLocation, options, timezoneId) {
     }
     this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
     this.init();
-    this.locale = 'en_gb';
+    this.locale = global.config.locale;
 }
 
 Generator.prototype.getLocation = async function () {

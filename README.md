@@ -16,7 +16,7 @@ const GoogleStore = require('../src/index');
                 lat: 51.6064929,
                 lng: -0.3391241
             }
-            const googleStore = new constructStore(address, {
+            const googleStore = new GoogleStore(address, {
                 googleAPIKey: 'xxxxxx',
                 placeQuery: 'argos',
                 retailerId: 'argos.co.uk',

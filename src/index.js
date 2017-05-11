@@ -31,6 +31,7 @@ const checkOptions = (options) => {
 
 const defaultOption = {
     type: 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
+    queryRadius: 500, //meters
     redis: {
         host: 'localhost',
         port: 6379,
@@ -65,6 +66,7 @@ const Generator = function (addressOrLocation, options, timezoneId) {
         self.placeQuery = global.config.placeQuery;
         self.locale = global.config.locale;
         self.retailerId = global.config.retailerId;
+        self.queryRadius = global.config.queryRadius;
         self.placeTypes = global.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
         if (!global.cache) {
             global.cache = new RedisCache(global.config.redis);
@@ -73,7 +75,10 @@ const Generator = function (addressOrLocation, options, timezoneId) {
             self.address = addressOrLocation
         } else {
             self.location = {
-                data: addressOrLocation
+                data: {
+                    lat: parseFloat(addressOrLocation.lat),
+                    lng: parseFloat(addressOrLocation.lng)
+                }
             }; //{lat:xxx, lng:xxxx}
         }
         if (timezoneId) {
@@ -112,7 +117,7 @@ Generator.prototype.getPlaceId = async function () {
     }
     let response = await self.getLocation();
     if (response.data) {
-        response = await fetchPlaceId(self.placeQuery, response.data, self.placeTypes);
+        response = await fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius);
     }
     if (response.error &&
         response.error.message.indexOf('No results') !== -1) {
@@ -163,12 +168,12 @@ Generator.prototype.getTimezone = async function () {
  */
 Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     const self = this;
-    if (self.store) {
-        return self.store;
-    }
+    // if (self.store) {
+    //     return self.store;
+    // }
     const response = await self.getPlaceDetails();
     if (response.data) {
-        const formatS = await formatStore(response.data, self.retailerId, self.locale);
+        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale);
         if (formatS.error) {
             return {
                 error: formatS.error
@@ -184,8 +189,6 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
                 formatS.timezone = timezone.data;
             }
         }
-
-        formatS.retailer = retailerId || 'independent';
         self.store = {
             data: Object.assign({}, formatS)
         };

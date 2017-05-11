@@ -31,7 +31,7 @@ async function getDetails(placeId, locale) {
             qs: query
         })
         .then(JSON.parse);
-    logger.info(`Fetched details: `, scraped.result);
+    logger.info(`Fetched details: `, scraped.result ? scraped.result.formatted_address : scraped.result);
     if (scraped && scraped.error_message) {
         throw new Error(scraped.error_message);
     } else if (!scraped) {

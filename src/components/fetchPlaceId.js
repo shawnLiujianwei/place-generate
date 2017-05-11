@@ -15,7 +15,7 @@ function parsePlaceId(res) {
  * @param store
  * @returns {*}
  */
-async function getPlaceId(name, location, type) {
+async function getPlaceId(name, location, type, radius) {
     if (!name || !location) {
         return Promise.reject(new Error('name and location are both required to fetch place id'));
     }
@@ -30,7 +30,7 @@ async function getPlaceId(name, location, type) {
     const query = {
         location: `${location.lat},${location.lng}`,
         name,
-        radius: '300',
+        radius: radius || '500',
         key: config.googleAPIKey
     }
     if (type) {
@@ -40,14 +40,12 @@ async function getPlaceId(name, location, type) {
 
             query.type = type;
         }
-    } else {
-        query.types = 'convenience_store|store|gas_station|grocery_or_supermarket'
     }
     const res = await http.get(apiURL.placeId(), {
         qs: query
     })
         .then(JSON.parse);
-    
+
     const placeId = parsePlaceId(res);
     // logger.info(`Fetched placeId :`, placeId);
     if (placeId) {
@@ -57,11 +55,11 @@ async function getPlaceId(name, location, type) {
     throw new Error(`No results from google nearbysearch with name=${name} type=${query.type || query.types}, location=${JSON.stringify(location)}`);
 }
 
-module.exports = async (name, location, type, retryTimes) => {
+module.exports = async (name, location, type, radius, retryTimes) => {
     let error = null;
     for (let i = 0; i < (retryTimes || 1); i++) {
         try {
-            const placeId = await  getPlaceId(name, location, type);
+            const placeId = await  getPlaceId(name, location, type, radius);
             return {
                 data: placeId
             }

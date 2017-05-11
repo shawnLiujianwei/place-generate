@@ -57,7 +57,13 @@ const defaultOption = {
 //     return null;
 // }
 
-
+/**
+ *
+ * @param addressOrLocation address string or {lat:xxx, lng:xxx}
+ * @param options
+ * @param timezoneId
+ * @constructor
+ */
 const Generator = function (addressOrLocation, options, timezoneId) {
     this.init = function () {
         if (!addressOrLocation) {

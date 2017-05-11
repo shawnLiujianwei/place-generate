@@ -47,6 +47,7 @@ async function getPlaceId(name, location, type) {
         qs: query
     })
         .then(JSON.parse);
+    
     const placeId = parsePlaceId(res);
     // logger.info(`Fetched placeId :`, placeId);
     if (placeId) {

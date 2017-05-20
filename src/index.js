@@ -36,11 +36,11 @@ const defaultOption = {
         host: 'localhost',
         port: 6379,
         namespace: 'construct-store-by-google-redis-cache',
-        expire: 604800 // 7 days
+        expire: 604800 * 4 // 28 days
     },
     redisClient: null,
-    googleAPIKey: '',
-    gcacheURL: 'https://gcache.evan.dotter.me'
+    googleAPIKey: ''
+    // gcacheURL: 'https://gcache.evan.dotter.me'
 };
 
 
@@ -66,12 +66,18 @@ const Generator = function (addressOrLocation, options, timezoneId) {
         self.queryRadius = global.config.queryRadius;
         self.placeTypes = global.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
         if (!global.cache) {
-            if (!options.redis) {
-                console.info('Will use default redis configuration:', defaultOption.redis);
+            if (global.config.redisClient) {
+                global.cache = new RedisCache(global.config.redisClient);
             } else {
                 options.redis = Object.assign({}, defaultOption.redis, options.redis);
+                global.cache = new RedisCache(global.config.redisClient, global.config.redis);
             }
-            global.cache = new RedisCache(global.config.redisClient, global.config.redis);
+            // if (!options.redis) {
+            //     console.info('Will use default redis configuration:', defaultOption.redis);
+            // } else {
+            //     options.redis = Object.assign({}, defaultOption.redis, options.redis);
+            // }
+            // global.cache = new RedisCache(global.config.redisClient, global.config.redis);
         }
         if (typeof addressOrLocation === 'string') {
             self.address = addressOrLocation
@@ -102,8 +108,13 @@ Generator.prototype.getLocation = async function () {
     if (self.location) {
         return self.location;
     }
-    const response = await fetchLocation(self.address);
-    if (response.data || (response.error.message.indexOf('No results from geocode api'))) {
+    let response = await fetchLocation(self.address);
+    if (response.error && response.error.message.indexOf('No results') !== -1) {
+        self.location = response = {
+            message: response.error.message
+        }
+    }
+    if (response.data) {
         self.location = response;
     }
     return response;
@@ -125,7 +136,7 @@ Generator.prototype.getPlaceId = async function () {
         response.error.message.indexOf('No results') !== -1) {
         self.placeId = response = {
             data: null,
-            message: response.error ? response.error.message : 'OK'
+            message: response.error.message || 'OK'
         };
     }
     return response;
@@ -197,6 +208,20 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     }
     return Object.assign(response, self.store);
 
+}
+
+Generator.prototype.execute = async function (fnName, throwError) {
+    if (!fnName) {
+        throw new Error("Function name is required");
+    }
+    const response = await this[fnName]();
+    if (response.error) {
+        throw response.error;
+    }
+    if (throwError && !response.data) {
+        throw new Error(response.message || `unknown error when exec funtion ${fnName}`);
+    }
+    return response.data;
 }
 
 module.exports = Generator;

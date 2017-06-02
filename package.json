@@ -1,25 +1,49 @@
 {
-  "name": "place-generator",
-  "version": "3.0.7",
-  "description": "construct store that ready to insert into mongodb from google",
-  "keywords": [
-    "google",
-    "google maps",
-    "place",
-    "store",
-    "place"
+  "_args": [
+    [
+      "place-generator@^3.0.6",
+      "/Users/shawn/projects/britvic-import-lambda"
+    ]
   ],
-  "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "_cnpm_publish_time": 1495244478873,
+  "_from": "place-generator@>=3.0.6 <4.0.0",
+  "_hasShrinkwrap": false,
+  "_id": "place-generator@3.0.7",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/place-generator",
+  "_nodeVersion": "7.8.0",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/place-generator-3.0.7.tgz_1495244478647_0.9792014011181891"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com:shawnLiujianwei/place-generator.git"
+  "_npmUser": {
+    "email": "shawn.liu@dotter.me",
+    "name": "shawn_ljw"
   },
-  "author": "Shawn Liu",
-  "license": "MIT",
-  "homepage": "https://github.com/shawnLiujianwei/place-generator.git#readme",
+  "_npmVersion": "4.2.0",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "place-generator",
+    "raw": "place-generator@^3.0.6",
+    "rawSpec": "^3.0.6",
+    "scope": null,
+    "spec": ">=3.0.6 <4.0.0",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_shasum": "584cb284e8493ba80644582d2ca86bc657866c67",
+  "_shrinkwrap": null,
+  "_spec": "place-generator@^3.0.6",
+  "_where": "/Users/shawn/projects/britvic-import-lambda",
+  "author": {
+    "name": "Shawn Liu"
+  },
+  "bugs": {
+    "url": "https://github.com/shawnLiujianwei/place-generator/issues"
+  },
   "dependencies": {
     "bluebird": "^3.5.0",
     "crypto-sha1": "^0.1.0",
@@ -27,5 +51,51 @@
     "redis": "^2.7.1",
     "request": "^2.81.0",
     "request-promise": "^4.2.0"
-  }
+  },
+  "description": "construct store that ready to insert into mongodb from google",
+  "devDependencies": {
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2016": "^6.24.1",
+    "babel-preset-es2017": "^6.24.1",
+    "uglifyjs-webpack-plugin": "^0.4.3"
+  },
+  "directories": {},
+  "dist": {
+    "noattachment": false,
+    "shasum": "584cb284e8493ba80644582d2ca86bc657866c67",
+    "size": 6695,
+    "tarball": "http://registry.npm.taobao.org/place-generator/download/place-generator-3.0.7.tgz"
+  },
+  "gitHead": "3d249bfefcfa0b98a909d70ab7f0c3e113408b0a",
+  "homepage": "https://github.com/shawnLiujianwei/place-generator.git#readme",
+  "keywords": [
+    "google",
+    "google maps",
+    "place",
+    "store",
+    "place"
+  ],
+  "license": "MIT",
+  "main": "src/index.bundle.js",
+  "maintainers": [
+    {
+      "email": "shawn.liu@dotter.me",
+      "name": "shawn_ljw"
+    }
+  ],
+  "name": "place-generator",
+  "optionalDependencies": {},
+  "publish_time": 1495244478873,
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/shawnLiujianwei/place-generator.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "3.0.6"
 }

@@ -45,6 +45,7 @@
     "url": "https://github.com/shawnLiujianwei/place-generator/issues"
   },
   "dependencies": {
+    "babel-runtime": "^6.23.0",
     "bluebird": "^3.5.0",
     "crypto-sha1": "^0.1.0",
     "log4js": "^1.1.1",

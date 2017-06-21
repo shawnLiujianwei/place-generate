@@ -1268,7 +1268,7 @@ var checkOptions = function checkOptions(options) {
     }
 
     if (!options.retailerId) {
-        throw new DateError('retailer id is required');
+        throw new Error('retailer id is required');
     }
     // if (!options.placeQuery) {
     //     throw new Error('placeQuery  is required');
@@ -1307,7 +1307,7 @@ var Generator = function Generator(addressOrLocation, options, timezoneId) {
         var self = this;
         checkOptions(options);
 
-        global.config = (0, _assign2.default)({}, defaultOption, options);
+        global.config = (0, _assign2.default)(global.config || {}, defaultOption, options);
         self.placeQuery = global.config.placeQuery;
         self.locale = global.config.locale;
         self.retailerId = global.config.retailerId;

@@ -1250,6 +1250,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * Created by Shawn Liu on 17/4/19.
  */
+var log4js = __webpack_require__(2);
 var RedisCache = __webpack_require__(9);
 var geocode = __webpack_require__(15);
 var fetchLocation = __webpack_require__(10);
@@ -1257,7 +1258,7 @@ var fetchPlaceId = __webpack_require__(12);
 var fetchPlaceDetails = __webpack_require__(11);
 var fetchTimezone = __webpack_require__(13);
 var formatStore = __webpack_require__(14);
-var logger = __webpack_require__(2).getLogger('src/index.js');
+var logger = log4js.getLogger('src/index.js');
 
 var checkOptions = function checkOptions(options) {
     if (!options) {
@@ -1306,8 +1307,28 @@ var Generator = function Generator(addressOrLocation, options, timezoneId) {
         }
         var self = this;
         checkOptions(options);
-
         global.config = (0, _assign2.default)(global.config || {}, defaultOption, options);
+        if (global.config.verbose) {
+            log4js.configure({
+                appenders: [{
+                    type: 'console',
+                    level: global.config.logLevel || 'DEBUG'
+                }],
+                levels: {
+                    '[all]': global.config.logLevel || 'DEBUG'
+                }
+            });
+        } else {
+            log4js.configure({
+                appenders: [{
+                    type: 'console',
+                    level: 'OFF'
+                }],
+                levels: {
+                    '[all]': 'OFF'
+                }
+            });
+        }
         self.placeQuery = global.config.placeQuery;
         self.locale = global.config.locale;
         self.retailerId = global.config.retailerId;

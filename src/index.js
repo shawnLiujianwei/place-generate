@@ -1,6 +1,7 @@
 /**
  * Created by Shawn Liu on 17/4/19.
  */
+const log4js = require('log4js');
 const RedisCache = require('./components/RedisCache');
 const geocode = require('./components/geocode');
 const fetchLocation = require('./components/fetchLocation');
@@ -8,7 +9,7 @@ const fetchPlaceId = require('./components/fetchPlaceId');
 const fetchPlaceDetails = require('./components/fetchPlaceDetails');
 const fetchTimezone = require('./components/fetchTimezone');
 const formatStore = require('./components/formatStore');
-const logger = require('log4js').getLogger('src/index.js');
+const logger = log4js.getLogger('src/index.js');
 
 const checkOptions = (options) => {
     if (!options) {
@@ -58,8 +59,32 @@ const Generator = function (addressOrLocation, options, timezoneId) {
         }
         const self = this;
         checkOptions(options);
-
         global.config = Object.assign(global.config || {}, defaultOption, options);
+        if (global.config.verbose) {
+            log4js.configure({
+                appenders: [
+                    {
+                        type: 'console',
+                        level: global.config.logLevel || 'DEBUG'
+                    }
+                ],
+                levels: {
+                    '[all]': global.config.logLevel || 'DEBUG'
+                }
+            });
+        } else {
+            log4js.configure({
+                appenders: [
+                    {
+                        type: 'console',
+                        level: 'OFF'
+                    }
+                ],
+                levels: {
+                    '[all]': 'OFF'
+                }
+            });
+        }
         self.placeQuery = global.config.placeQuery;
         self.locale = global.config.locale;
         self.retailerId = global.config.retailerId;

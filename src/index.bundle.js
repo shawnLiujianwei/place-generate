@@ -1432,7 +1432,7 @@ Generator.prototype.getPlaceId = (0, _asyncToGenerator3.default)(_regenerator2.d
                         break;
                     }
 
-                    throw new DateError('place name is required when try to get place');
+                    throw new Error('place name is required when try to get place');
 
                 case 5:
                     _context2.next = 7;

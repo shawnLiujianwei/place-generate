@@ -151,7 +151,7 @@ Generator.prototype.getPlaceId = async function () {
         return self.placeId;
     }
     if (!self.placeQuery) {
-        throw new DateError('place name is required when try to get place');
+        throw new Error('place name is required when try to get place');
     }
     let response = await self.getLocation();
     if (response.data) {

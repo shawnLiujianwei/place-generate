@@ -15,11 +15,10 @@ function parsePlaceId(res) {
  * @param store
  * @returns {*}
  */
-async function getPlaceId(name, location, type, radius) {
+async function getPlaceId(name, location, type, radius, cache, googleKey) {
     if (!name || !location) {
         return Promise.reject(new Error('name and location are both required to fetch place id'));
     }
-    const {cache, config} = global;
     const cacheKey = `placeId-${name}-${JSON.stringify(location)}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
@@ -31,7 +30,7 @@ async function getPlaceId(name, location, type, radius) {
         location: `${location.lat},${location.lng}`,
         name,
         radius: radius || '500',
-        key: config.googleAPIKey
+        key: googleKey
     }
     if (type) {
         if (type.indexOf('|') !== -1) {
@@ -55,11 +54,11 @@ async function getPlaceId(name, location, type, radius) {
     throw new Error(`No results from google nearbysearch with name=${name} type=${query.type || query.types}, location=${JSON.stringify(location)}`);
 }
 
-module.exports = async (name, location, type, radius, retryTimes) => {
+module.exports = async (name, location, type, radius, cache, googleKey, retryTimes) => {
     let error = null;
     for (let i = 0; i < (retryTimes || 1); i++) {
         try {
-            const placeId = await  getPlaceId(name, location, type, radius);
+            const placeId = await  getPlaceId(name, location, type, radius, cache, googleKey);
             return {
                 data: placeId
             }

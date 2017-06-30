@@ -2,7 +2,7 @@
  * Created by shawn on 17/2/10.
  */
 function getBaseServer() {
-    return global.config.gcacheURL ? global.config.gcacheURL : 'https://maps.googleapis.com';
+    return process.env.placeGeneratorGcacheURL ? process.env.placeGeneratorGcacheURL : 'https://maps.googleapis.com';
 }
 
 exports.radar = function () {

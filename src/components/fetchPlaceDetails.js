@@ -6,8 +6,7 @@ const logger = require('log4js').getLogger('src/components/fetchPlaceDetails.js'
 const Promise = require('bluebird');
 const apiURL = require('./googleServerURL');
 
-async function getDetails(placeId, locale) {
-    const {cache, config} = global;
+async function getDetails(placeId, locale, cache, googleKey) {
     if (!placeId) {
         return Promise.reject({
             errorMessage: 'placeId is required to get place details'
@@ -15,7 +14,7 @@ async function getDetails(placeId, locale) {
     }
     const query = {
         placeid: placeId,
-        key: config.googleAPIKey,
+        key: googleKey,
         language: locale ? locale.substr(0, 2) : 'en'
     };
 
@@ -41,12 +40,12 @@ async function getDetails(placeId, locale) {
     return scraped;
 }
 
-module.exports = async (placeId, locale, retryTimes) => {
+module.exports = async (placeId, locale, cache, googleKey, retryTimes) => {
     const times = retryTimes || 1;
     let error = null;
     for (let i = 0; i < times; i++) {
         try {
-            const details = await getDetails(placeId, locale);
+            const details = await getDetails(placeId, locale, cache, googleKey);
             return {
                 data: details
             }

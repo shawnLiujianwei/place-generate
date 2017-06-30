@@ -11,8 +11,7 @@ function parseLocation(res) {
     return res.results[0].geometry.location;
 }
 
-async function getLocation(address) {
-    const {cache, config} = global;
+async function getLocation(address, cache, googleKey) {
     if (!address) {
         throw new Error('address is required when getting location');
     }
@@ -28,7 +27,7 @@ async function getLocation(address) {
     const jsonResponse = await http.get(apiURL.location(), {
         qs: {
             address: address,
-            key: config.googleAPIKey
+            key: googleKey
         }
     })
         .then(JSON.parse);
@@ -42,12 +41,12 @@ async function getLocation(address) {
     return location;
 }
 
-module.exports = async (address, retryTimes) => {
+module.exports = async (address, cache, googleKey, retryTimes) => {
     const times = retryTimes || 1;
     let error = null;
     for (let i = 0; i < times; i++) {
         try {
-            const location = await getLocation(address);
+            const location = await getLocation(address, cache, googleKey);
             return {
                 data: location
             }

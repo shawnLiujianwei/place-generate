@@ -3,7 +3,7 @@
  */
 const log4js = require('log4js');
 const RedisCache = require('./components/RedisCache');
-const geocode = require('./components/geocode');
+// const geocode = require('./components/geocode');
 const fetchLocation = require('./components/fetchLocation');
 const fetchPlaceId = require('./components/fetchPlaceId');
 const fetchPlaceDetails = require('./components/fetchPlaceDetails');
@@ -21,6 +21,10 @@ const checkOptions = (options) => {
 
     if (!options.retailerId) {
         throw new Error('retailer id is required');
+    }
+
+    if (!options.address && !options.location) {
+        throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
     }
     // if (!options.placeQuery) {
     //     throw new Error('placeQuery  is required');
@@ -52,24 +56,25 @@ const defaultOption = {
  * @param timezoneId
  * @constructor
  */
-const Generator = function (addressOrLocation, options, timezoneId) {
+const Generator = function (options, timezoneId) {
+    const self = this;
     this.init = function () {
-        if (!addressOrLocation) {
-            throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
-        }
-        const self = this;
+
         checkOptions(options);
-        global.config = Object.assign(global.config || {}, defaultOption, options);
-        if (global.config.verbose) {
+        self.config = Object.assign(self.config || {}, defaultOption, options);
+        if (self.config.gcacheURL) {
+            process.env.placeGeneratorGcacheURL = self.config.gcacheURL;
+        }
+        if (self.config.verbose) {
             log4js.configure({
                 appenders: [
                     {
                         type: 'console',
-                        level: global.config.logLevel || 'DEBUG'
+                        level: self.config.logLevel || 'DEBUG'
                     }
                 ],
                 levels: {
-                    '[all]': global.config.logLevel || 'DEBUG'
+                    '[all]': self.config.logLevel || 'DEBUG'
                 }
             });
         } else {
@@ -85,47 +90,40 @@ const Generator = function (addressOrLocation, options, timezoneId) {
                 }
             });
         }
-        self.placeQuery = global.config.placeQuery;
-        self.locale = global.config.locale;
-        self.retailerId = global.config.retailerId;
-        self.queryRadius = global.config.queryRadius;
-        self.placeTypes = global.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
-        if (!global.cache) {
-            if (global.config.redisClient) {
-                global.cache = new RedisCache(global.config.redisClient);
+        self.placeQuery = self.config.placeQuery;
+        self.locale = self.config.locale;
+        self.retailerId = self.config.retailerId;
+        self.queryRadius = self.config.queryRadius;
+        self.placeTypes = self.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
+        if (!self.redisCache) {
+            if (self.config.redisClient) {
+                self.redisCache = new RedisCache(self.config.redisClient);
             } else {
-                options.redis = Object.assign({}, defaultOption.redis, options.redis);
-                global.cache = new RedisCache(global.config.redisClient, global.config.redis);
+                self.config.redis = Object.assign({}, defaultOption.redis, options.redis);
+                self.redisCache = new RedisCache(null, self.config.redis);
             }
-            // if (!options.redis) {
-            //     console.info('Will use default redis configuration:', defaultOption.redis);
-            // } else {
-            //     options.redis = Object.assign({}, defaultOption.redis, options.redis);
-            // }
-            // global.cache = new RedisCache(global.config.redisClient, global.config.redis);
         }
-        if (typeof addressOrLocation === 'string') {
-            self.address = addressOrLocation
-        } else {
-            self.location = {
-                data: {
-                    lat: parseFloat(addressOrLocation.lat),
-                    lng: parseFloat(addressOrLocation.lng)
-                }
-            }; //{lat:xxx, lng:xxxx}
-        }
-        if (timezoneId) {
-            self.timezone = {
-                data: {
-                    timeZoneId: timezoneId
-                }
-            }
+        if (self.config.address) {
+            self.address = self.config.address;
         }
 
+        if (self.config.location) {
+            self.location = {
+                data: {
+                    lat: parseFloat(self.config.location.lat),
+                    lng: parseFloat(self.config.location.lng)
+                }
+            }
+        }
+        if (self.config.placeId) {
+            self.placeId = {
+                data: self.config.placeId
+            }
+        }
     }
     this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
     this.init();
-    this.locale = global.config.locale;
+    this.locale = self.config.locale;
 }
 
 Generator.prototype.getLocation = async function () {
@@ -133,7 +131,7 @@ Generator.prototype.getLocation = async function () {
     if (self.location) {
         return self.location;
     }
-    let response = await fetchLocation(self.address);
+    let response = await fetchLocation(self.address, self.redisCache, self.config.googleAPIKey);
     if (response.error && response.error.message.indexOf('No results') !== -1) {
         self.location = response = {
             message: response.error.message
@@ -155,7 +153,7 @@ Generator.prototype.getPlaceId = async function () {
     }
     let response = await self.getLocation();
     if (response.data) {
-        response = await fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius);
+        response = await fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius, self.redisCache, self.config.googleAPIKey);
     }
     if (response.error &&
         response.error.message.indexOf('No results') !== -1) {
@@ -174,7 +172,7 @@ Generator.prototype.getPlaceDetails = async function () {
     }
     let response = await self.getPlaceId();
     if (response.data) {
-        response = await fetchPlaceDetails(response.data, self.locale);
+        response = await fetchPlaceDetails(response.data, self.locale, self.redisCache, self.config.googleAPIKey);
     }
     if (response.data) {
         self.placeDetails = response;
@@ -189,7 +187,7 @@ Generator.prototype.getTimezone = async function () {
     }
     let response = await self.getLocation();
     if (response.data) {
-        response = await fetchTimezone(response.data);
+        response = await fetchTimezone(response.data, self.redisCache, self.config.googleAPIKey);
     }
     if (response.data) {
         self.timezone = response;

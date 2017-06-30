@@ -64,7 +64,7 @@ module.exports =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
+/******/ 	return __webpack_require__(__webpack_require__.s = 15);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -102,7 +102,7 @@ module.exports = require("bluebird");
  * Created by shawn on 17/2/10.
  */
 function getBaseServer() {
-    return global.config.gcacheURL ? global.config.gcacheURL : 'https://maps.googleapis.com';
+    return process.env.placeGeneratorGcacheURL ? process.env.placeGeneratorGcacheURL : 'https://maps.googleapis.com';
 }
 
 exports.radar = function () {
@@ -182,10 +182,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Created by Shawn Liu on 17/4/19.
  */
 var bluebird = __webpack_require__(3);
-var redis = __webpack_require__(18);
+var redis = __webpack_require__(17);
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
-var sha1 = __webpack_require__(17);
+var sha1 = __webpack_require__(16);
 
 var RedisCache = function RedisCache(client, options) {
     // arrow function can not be used as constructor
@@ -293,69 +293,66 @@ var _asyncToGenerator2 = __webpack_require__(0);
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var getLocation = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(address) {
-        var _global, cache, config, cacheKey, cacheData, jsonResponse, location;
-
+    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(address, cache, googleKey) {
+        var cacheKey, cacheData, jsonResponse, location;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
                     case 0:
-                        _global = global, cache = _global.cache, config = _global.config;
-
                         if (address) {
-                            _context.next = 3;
+                            _context.next = 2;
                             break;
                         }
 
                         throw new Error('address is required when getting location');
 
-                    case 3:
+                    case 2:
 
                         // const address = `${store.address}, ${store.city}, ${store.state} ${store.zip}`;
                         cacheKey = 'location_' + address;
-                        _context.next = 6;
+                        _context.next = 5;
                         return cache.getItem(cacheKey);
 
-                    case 6:
+                    case 5:
                         cacheData = _context.sent;
 
                         if (!(cacheData && cacheData !== {})) {
-                            _context.next = 10;
+                            _context.next = 9;
                             break;
                         }
 
                         logger.info('Using location cache: ' + address);
                         return _context.abrupt('return', cacheData);
 
-                    case 10:
-                        _context.next = 12;
+                    case 9:
+                        _context.next = 11;
                         return http.get(apiURL.location(), {
                             qs: {
                                 address: address,
-                                key: config.googleAPIKey
+                                key: googleKey
                             }
                         }).then(JSON.parse);
 
-                    case 12:
+                    case 11:
                         jsonResponse = _context.sent;
                         location = parseLocation(jsonResponse);
 
                         if (location) {
-                            _context.next = 16;
+                            _context.next = 15;
                             break;
                         }
 
                         throw new Error(jsonResponse.error_message || 'No results from geocode api');
 
-                    case 16:
+                    case 15:
                         logger.info('Fetched location: ', location);
-                        _context.next = 19;
+                        _context.next = 18;
                         return cache.setItem(cacheKey, location);
 
-                    case 19:
+                    case 18:
                         return _context.abrupt('return', location);
 
-                    case 20:
+                    case 19:
                     case 'end':
                         return _context.stop();
                 }
@@ -363,7 +360,7 @@ var getLocation = function () {
         }, _callee, this);
     }));
 
-    return function getLocation(_x) {
+    return function getLocation(_x, _x2, _x3) {
         return _ref.apply(this, arguments);
     };
 }();
@@ -384,7 +381,7 @@ function parseLocation(res) {
 }
 
 module.exports = function () {
-    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(address, retryTimes) {
+    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(address, cache, googleKey, retryTimes) {
         var times, error, i, location;
         return _regenerator2.default.wrap(function _callee2$(_context2) {
             while (1) {
@@ -402,7 +399,7 @@ module.exports = function () {
 
                         _context2.prev = 4;
                         _context2.next = 7;
-                        return getLocation(address);
+                        return getLocation(address, cache, googleKey);
 
                     case 7:
                         location = _context2.sent;
@@ -444,7 +441,7 @@ module.exports = function () {
         }, _callee2, undefined, [[4, 11]]);
     }));
 
-    return function (_x2, _x3) {
+    return function (_x4, _x5, _x6, _x7) {
         return _ref2.apply(this, arguments);
     };
 }();
@@ -465,17 +462,14 @@ var _asyncToGenerator2 = __webpack_require__(0);
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var getDetails = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(placeId, locale) {
-        var _global, cache, config, query, cacheKey, cacheData, scraped;
-
+    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(placeId, locale, cache, googleKey) {
+        var query, cacheKey, cacheData, scraped;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
                     case 0:
-                        _global = global, cache = _global.cache, config = _global.config;
-
                         if (placeId) {
-                            _context.next = 3;
+                            _context.next = 2;
                             break;
                         }
 
@@ -483,61 +477,61 @@ var getDetails = function () {
                             errorMessage: 'placeId is required to get place details'
                         }));
 
-                    case 3:
+                    case 2:
                         query = {
                             placeid: placeId,
-                            key: config.googleAPIKey,
+                            key: googleKey,
                             language: locale ? locale.substr(0, 2) : 'en'
                         };
                         cacheKey = 'details_' + placeId + '_' + query.language;
-                        _context.next = 7;
+                        _context.next = 6;
                         return cache.getItem(cacheKey);
 
-                    case 7:
+                    case 6:
                         cacheData = _context.sent;
 
                         if (!(cacheData && cacheData !== {})) {
-                            _context.next = 11;
+                            _context.next = 10;
                             break;
                         }
 
                         logger.info('Using details cache: ' + placeId);
                         return _context.abrupt('return', cacheData);
 
-                    case 11:
-                        _context.next = 13;
+                    case 10:
+                        _context.next = 12;
                         return http.get(apiURL.details(), {
                             qs: query
                         }).then(JSON.parse);
 
-                    case 13:
+                    case 12:
                         scraped = _context.sent;
 
                         logger.info('Fetched details: ', scraped.result ? scraped.result.formatted_address : scraped.result);
 
                         if (!(scraped && scraped.error_message)) {
-                            _context.next = 19;
+                            _context.next = 18;
                             break;
                         }
 
                         throw new Error(scraped.error_message);
 
-                    case 19:
+                    case 18:
                         if (scraped) {
-                            _context.next = 21;
+                            _context.next = 20;
                             break;
                         }
 
                         throw new Error('Got no response from google API');
 
-                    case 21:
-                        _context.next = 23;
+                    case 20:
+                        _context.next = 22;
                         return cache.setItem(cacheKey, scraped);
 
-                    case 23:
+                    case 22:
                         return _context.abrupt('return', scraped);
 
-                    case 24:
+                    case 23:
                     case 'end':
                         return _context.stop();
                 }
@@ -545,7 +539,7 @@ var getDetails = function () {
         }, _callee, this);
     }));
 
-    return function getDetails(_x, _x2) {
+    return function getDetails(_x, _x2, _x3, _x4) {
         return _ref.apply(this, arguments);
     };
 }();
@@ -561,7 +555,7 @@ var Promise = __webpack_require__(3);
 var apiURL = __webpack_require__(4);
 
 module.exports = function () {
-    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(placeId, locale, retryTimes) {
+    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(placeId, locale, cache, googleKey, retryTimes) {
         var times, error, i, details;
         return _regenerator2.default.wrap(function _callee2$(_context2) {
             while (1) {
@@ -579,7 +573,7 @@ module.exports = function () {
 
                         _context2.prev = 4;
                         _context2.next = 7;
-                        return getDetails(placeId, locale);
+                        return getDetails(placeId, locale, cache, googleKey);
 
                     case 7:
                         details = _context2.sent;
@@ -621,7 +615,7 @@ module.exports = function () {
         }, _callee2, undefined, [[4, 11]]);
     }));
 
-    return function (_x3, _x4, _x5) {
+    return function (_x5, _x6, _x7, _x8, _x9) {
         return _ref2.apply(this, arguments);
     };
 }();
@@ -651,9 +645,8 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
  * @returns {*}
  */
 var getPlaceId = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, type, radius) {
-        var _global, cache, config, cacheKey, cacheData, query, res, placeId;
-
+    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, type, radius, cache, googleKey) {
+        var cacheKey, cacheData, query, res, placeId;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -666,29 +659,28 @@ var getPlaceId = function () {
                         return _context.abrupt('return', Promise.reject(new Error('name and location are both required to fetch place id')));
 
                     case 2:
-                        _global = global, cache = _global.cache, config = _global.config;
                         cacheKey = 'placeId-' + name + '-' + (0, _stringify2.default)(location);
-                        _context.next = 6;
+                        _context.next = 5;
                         return cache.getItem(cacheKey);
 
-                    case 6:
+                    case 5:
                         cacheData = _context.sent;
 
                         if (!(cacheData && cacheData !== {})) {
-                            _context.next = 10;
+                            _context.next = 9;
                             break;
                         }
 
                         logger.info('Using placeId cache: \'' + location + '\'');
                         return _context.abrupt('return', cacheData);
 
-                    case 10:
+                    case 9:
                         // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
                         query = {
                             location: location.lat + ',' + location.lng,
                             name: name,
                             radius: radius || '500',
-                            key: config.googleAPIKey
+                            key: googleKey
                         };
 
                         if (type) {
@@ -699,31 +691,31 @@ var getPlaceId = function () {
                                 query.type = type;
                             }
                         }
-                        _context.next = 14;
+                        _context.next = 13;
                         return http.get(apiURL.placeId(), {
                             qs: query
                         }).then(JSON.parse);
 
-                    case 14:
+                    case 13:
                         res = _context.sent;
                         placeId = parsePlaceId(res);
                         // logger.info(`Fetched placeId :`, placeId);
 
                         if (!placeId) {
-                            _context.next = 20;
+                            _context.next = 19;
                             break;
                         }
 
-                        _context.next = 19;
+                        _context.next = 18;
                         return cache.setItem(cacheKey, placeId);
 
-                    case 19:
+                    case 18:
                         return _context.abrupt('return', placeId);
 
-                    case 20:
+                    case 19:
                         throw new Error('No results from google nearbysearch with name=' + name + ' type=' + (query.type || query.types) + ', location=' + (0, _stringify2.default)(location));
 
-                    case 21:
+                    case 20:
                     case 'end':
                         return _context.stop();
                 }
@@ -731,7 +723,7 @@ var getPlaceId = function () {
         }, _callee, this);
     }));
 
-    return function getPlaceId(_x, _x2, _x3, _x4) {
+    return function getPlaceId(_x, _x2, _x3, _x4, _x5, _x6) {
         return _ref.apply(this, arguments);
     };
 }();
@@ -751,7 +743,7 @@ function parsePlaceId(res) {
 }
 
 module.exports = function () {
-    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(name, location, type, radius, retryTimes) {
+    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(name, location, type, radius, cache, googleKey, retryTimes) {
         var error, i, placeId;
         return _regenerator2.default.wrap(function _callee2$(_context2) {
             while (1) {
@@ -768,7 +760,7 @@ module.exports = function () {
 
                         _context2.prev = 3;
                         _context2.next = 6;
-                        return getPlaceId(name, location, type, radius);
+                        return getPlaceId(name, location, type, radius, cache, googleKey);
 
                     case 6:
                         placeId = _context2.sent;
@@ -808,7 +800,7 @@ module.exports = function () {
         }, _callee2, undefined, [[3, 10]]);
     }));
 
-    return function (_x5, _x6, _x7, _x8, _x9) {
+    return function (_x7, _x8, _x9, _x10, _x11, _x12, _x13) {
         return _ref2.apply(this, arguments);
     };
 }();
@@ -834,9 +826,8 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
  * @returns {*}
  */
 var getTimezone = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(geoLocation) {
-        var _global, cache, config, cacheKey, cacheData, scraped;
-
+    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(geoLocation, cache, googleAPIKey) {
+        var cacheKey, cacheData, scraped;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -857,59 +848,58 @@ var getTimezone = function () {
                         throw new Error('please set valid lat&lng');
 
                     case 4:
-                        _global = global, cache = _global.cache, config = _global.config;
                         cacheKey = 'timezone_' + geoLocation.lat + '-' + geoLocation.lng;
-                        _context.next = 8;
+                        _context.next = 7;
                         return cache.getItem(cacheKey);
 
-                    case 8:
+                    case 7:
                         cacheData = _context.sent;
 
                         if (!(cacheData && cacheData !== {})) {
-                            _context.next = 12;
+                            _context.next = 11;
                             break;
                         }
 
                         logger.info('Using timezone cache:', geoLocation);
                         return _context.abrupt('return', cacheData);
 
-                    case 12:
-                        _context.next = 14;
+                    case 11:
+                        _context.next = 13;
                         return http.get(apiURL.timezone(), {
                             qs: {
                                 location: geoLocation.lat + ',' + geoLocation.lng,
                                 timestamp: new Date().getTime() / 1000,
-                                key: config.googleAPIKey
+                                key: googleAPIKey
                             }
                         }).then(JSON.parse);
 
-                    case 14:
+                    case 13:
                         scraped = _context.sent;
 
                         if (!(scraped && scraped.error_message)) {
-                            _context.next = 19;
+                            _context.next = 18;
                             break;
                         }
 
                         throw new Error(scraped.error_message);
 
-                    case 19:
+                    case 18:
                         if (scraped) {
-                            _context.next = 21;
+                            _context.next = 20;
                             break;
                         }
 
                         throw new Error('Got no response from google API');
 
-                    case 21:
+                    case 20:
                         logger.info('Fetched timezone: ', scraped.timeZoneId);
-                        _context.next = 24;
+                        _context.next = 23;
                         return cache.setItem(cacheKey, scraped);
 
-                    case 24:
+                    case 23:
                         return _context.abrupt('return', scraped);
 
-                    case 25:
+                    case 24:
                     case 'end':
                         return _context.stop();
                 }
@@ -917,7 +907,7 @@ var getTimezone = function () {
         }, _callee, this);
     }));
 
-    return function getTimezone(_x) {
+    return function getTimezone(_x, _x2, _x3) {
         return _ref.apply(this, arguments);
     };
 }();
@@ -930,7 +920,7 @@ var Promise = __webpack_require__(3);
 var apiURL = __webpack_require__(4);
 
 module.exports = function () {
-    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(location, retryTimes) {
+    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(location, cache, googleKey, retryTimes) {
         var error, i, timezone;
         return _regenerator2.default.wrap(function _callee2$(_context2) {
             while (1) {
@@ -950,7 +940,7 @@ module.exports = function () {
                         return getTimezone({
                             lat: location.lat,
                             lng: location.lng
-                        });
+                        }, cache, googleKey);
 
                     case 6:
                         timezone = _context2.sent;
@@ -992,7 +982,7 @@ module.exports = function () {
         }, _callee2, undefined, [[3, 10]]);
     }));
 
-    return function (_x2, _x3) {
+    return function (_x4, _x5, _x6, _x7) {
         return _ref2.apply(this, arguments);
     };
 }();
@@ -1070,177 +1060,6 @@ var _asyncToGenerator2 = __webpack_require__(0);
 
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
-var getLocation = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(address) {
-        var _global, cache, config, cacheKey, cacheData, url, jsonResponse, location;
-
-        return _regenerator2.default.wrap(function _callee$(_context) {
-            while (1) {
-                switch (_context.prev = _context.next) {
-                    case 0:
-                        _global = global, cache = _global.cache, config = _global.config;
-
-                        if (address) {
-                            _context.next = 3;
-                            break;
-                        }
-
-                        throw new Error('address is required when getting location');
-
-                    case 3:
-                        // const address = `${store.address}, ${store.city}, ${store.state} ${store.zip}`;
-                        cacheKey = 'geocode_' + address;
-                        _context.next = 6;
-                        return cache.getItem(cacheKey);
-
-                    case 6:
-                        cacheData = _context.sent;
-
-                        if (!(cacheData && cacheData !== {})) {
-                            _context.next = 10;
-                            break;
-                        }
-
-                        logger.info('Using geocode cache: ' + address);
-                        return _context.abrupt('return', cacheData);
-
-                    case 10:
-                        url = apiURL.location();
-
-                        logger.info('Fetching geocode: ' + address);
-                        _context.next = 14;
-                        return http.get(url, {
-                            qs: {
-                                address: address,
-                                key: config.googleAPIKey
-                            }
-                        }).then(JSON.parse);
-
-                    case 14:
-                        jsonResponse = _context.sent;
-                        location = parseLocation(jsonResponse);
-
-                        if (location) {
-                            _context.next = 18;
-                            break;
-                        }
-
-                        throw new Error(jsonResponse.error_message || 'No results from geocode api');
-
-                    case 18:
-                        logger.info('Fetched geolocation: ' + location);
-                        _context.next = 21;
-                        return cache.setItem(cacheKey, location);
-
-                    case 21:
-                        return _context.abrupt('return', location);
-
-                    case 22:
-                    case 'end':
-                        return _context.stop();
-                }
-            }
-        }, _callee, this);
-    }));
-
-    return function getLocation(_x) {
-        return _ref.apply(this, arguments);
-    };
-}();
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var http = __webpack_require__(5);
-var logger = __webpack_require__(2).getLogger('src/components/geocode.js');
-var Promise = __webpack_require__(3);
-var apiURL = __webpack_require__(4);
-
-function parseLocation(res) {
-    if (!res.results.length) {
-        return null;
-    }
-
-    return {
-        location: res.results[0].geometry.location,
-        placeId: res.results[0].place_id
-    };
-}
-
-module.exports = function () {
-    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(address, retryTimes) {
-        var times, error, i;
-        return _regenerator2.default.wrap(function _callee2$(_context2) {
-            while (1) {
-                switch (_context2.prev = _context2.next) {
-                    case 0:
-                        times = retryTimes || 2;
-                        error = null;
-                        i = 0;
-
-                    case 3:
-                        if (!(i < times)) {
-                            _context2.next = 19;
-                            break;
-                        }
-
-                        _context2.prev = 4;
-                        _context2.next = 7;
-                        return getLocation(address);
-
-                    case 7:
-                        return _context2.abrupt('return', _context2.sent);
-
-                    case 10:
-                        _context2.prev = 10;
-                        _context2.t0 = _context2['catch'](4);
-
-                        logger.error(_context2.t0);
-                        if (_context2.t0 && _context2.t0.statusCode === 400) {
-                            error = {
-                                message: JSON.parse(_context2.t0.response.body).error_message
-                            };
-                        } else {
-                            error = _context2.t0;
-                        }
-                        _context2.next = 16;
-                        return Promise.delay(Math.random() * 100);
-
-                    case 16:
-                        i++;
-                        _context2.next = 3;
-                        break;
-
-                    case 19:
-                        throw error;
-
-                    case 20:
-                    case 'end':
-                        return _context2.stop();
-                }
-            }
-        }, _callee2, undefined, [[4, 10]]);
-    }));
-
-    return function (_x2, _x3) {
-        return _ref2.apply(this, arguments);
-    };
-}();
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _regenerator = __webpack_require__(1);
-
-var _regenerator2 = _interopRequireDefault(_regenerator);
-
-var _asyncToGenerator2 = __webpack_require__(0);
-
-var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
-
 var _assign = __webpack_require__(6);
 
 var _assign2 = _interopRequireDefault(_assign);
@@ -1252,7 +1071,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  */
 var log4js = __webpack_require__(2);
 var RedisCache = __webpack_require__(9);
-var geocode = __webpack_require__(15);
+// const geocode = require('./components/geocode');
 var fetchLocation = __webpack_require__(10);
 var fetchPlaceId = __webpack_require__(12);
 var fetchPlaceDetails = __webpack_require__(11);
@@ -1270,6 +1089,10 @@ var checkOptions = function checkOptions(options) {
 
     if (!options.retailerId) {
         throw new Error('retailer id is required');
+    }
+
+    if (!options.address && !options.location) {
+        throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
     }
     // if (!options.placeQuery) {
     //     throw new Error('placeQuery  is required');
@@ -1300,22 +1123,23 @@ var defaultOption = {
  * @param timezoneId
  * @constructor
  */
-var Generator = function Generator(addressOrLocation, options, timezoneId) {
+var Generator = function Generator(options, timezoneId) {
+    var self = this;
     this.init = function () {
-        if (!addressOrLocation) {
-            throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
-        }
-        var self = this;
+
         checkOptions(options);
-        global.config = (0, _assign2.default)(global.config || {}, defaultOption, options);
-        if (global.config.verbose) {
+        self.config = (0, _assign2.default)(self.config || {}, defaultOption, options);
+        if (self.config.gcacheURL) {
+            process.env.placeGeneratorGcacheURL = self.config.gcacheURL;
+        }
+        if (self.config.verbose) {
             log4js.configure({
                 appenders: [{
                     type: 'console',
-                    level: global.config.logLevel || 'DEBUG'
+                    level: self.config.logLevel || 'DEBUG'
                 }],
                 levels: {
-                    '[all]': global.config.logLevel || 'DEBUG'
+                    '[all]': self.config.logLevel || 'DEBUG'
                 }
             });
         } else {
@@ -1329,46 +1153,40 @@ var Generator = function Generator(addressOrLocation, options, timezoneId) {
                 }
             });
         }
-        self.placeQuery = global.config.placeQuery;
-        self.locale = global.config.locale;
-        self.retailerId = global.config.retailerId;
-        self.queryRadius = global.config.queryRadius;
-        self.placeTypes = global.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
-        if (!global.cache) {
-            if (global.config.redisClient) {
-                global.cache = new RedisCache(global.config.redisClient);
+        self.placeQuery = self.config.placeQuery;
+        self.locale = self.config.locale;
+        self.retailerId = self.config.retailerId;
+        self.queryRadius = self.config.queryRadius;
+        self.placeTypes = self.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
+        if (!self.redisCache) {
+            if (self.config.redisClient) {
+                self.redisCache = new RedisCache(self.config.redisClient);
             } else {
-                options.redis = (0, _assign2.default)({}, defaultOption.redis, options.redis);
-                global.cache = new RedisCache(global.config.redisClient, global.config.redis);
+                self.config.redis = (0, _assign2.default)({}, defaultOption.redis, options.redis);
+                self.redisCache = new RedisCache(null, self.config.redis);
             }
-            // if (!options.redis) {
-            //     console.info('Will use default redis configuration:', defaultOption.redis);
-            // } else {
-            //     options.redis = Object.assign({}, defaultOption.redis, options.redis);
-            // }
-            // global.cache = new RedisCache(global.config.redisClient, global.config.redis);
         }
-        if (typeof addressOrLocation === 'string') {
-            self.address = addressOrLocation;
-        } else {
+        if (self.config.address) {
+            self.address = self.config.address;
+        }
+
+        if (self.config.location) {
             self.location = {
                 data: {
-                    lat: parseFloat(addressOrLocation.lat),
-                    lng: parseFloat(addressOrLocation.lng)
+                    lat: parseFloat(self.config.location.lat),
+                    lng: parseFloat(self.config.location.lng)
                 }
-            }; //{lat:xxx, lng:xxxx}
+            };
         }
-        if (timezoneId) {
-            self.timezone = {
-                data: {
-                    timeZoneId: timezoneId
-                }
+        if (self.config.placeId) {
+            self.placeId = {
+                data: self.config.placeId
             };
         }
     };
     this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
     this.init();
-    this.locale = global.config.locale;
+    this.locale = self.config.locale;
 };
 
 Generator.prototype.getLocation = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee() {
@@ -1388,7 +1206,7 @@ Generator.prototype.getLocation = (0, _asyncToGenerator3.default)(_regenerator2.
 
                 case 3:
                     _context.next = 5;
-                    return fetchLocation(self.address);
+                    return fetchLocation(self.address, self.redisCache, self.config.googleAPIKey);
 
                 case 5:
                     response = _context.sent;
@@ -1447,7 +1265,7 @@ Generator.prototype.getPlaceId = (0, _asyncToGenerator3.default)(_regenerator2.d
                     }
 
                     _context2.next = 11;
-                    return fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius);
+                    return fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius, self.redisCache, self.config.googleAPIKey);
 
                 case 11:
                     response = _context2.sent;
@@ -1497,7 +1315,7 @@ Generator.prototype.getPlaceDetails = (0, _asyncToGenerator3.default)(_regenerat
                     }
 
                     _context3.next = 9;
-                    return fetchPlaceDetails(response.data, self.locale);
+                    return fetchPlaceDetails(response.data, self.locale, self.redisCache, self.config.googleAPIKey);
 
                 case 9:
                     response = _context3.sent;
@@ -1544,7 +1362,7 @@ Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.
                     }
 
                     _context4.next = 9;
-                    return fetchTimezone(response.data);
+                    return fetchTimezone(response.data, self.redisCache, self.config.googleAPIKey);
 
                 case 9:
                     response = _context4.sent;
@@ -1706,13 +1524,13 @@ Generator.prototype.execute = function () {
 module.exports = Generator;
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports) {
 
 module.exports = require("crypto-sha1");
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports) {
 
 module.exports = require("redis");

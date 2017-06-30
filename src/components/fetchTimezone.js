@@ -8,14 +8,13 @@ const apiURL = require('./googleServerURL');
  * @param geoLocation {lat:xxx, lng:xxx}
  * @returns {*}
  */
-async function getTimezone(geoLocation) {
+async function getTimezone(geoLocation, cache, googleAPIKey) {
     if (!geoLocation) {
         throw new Error('No location , so can not get timezone');
     }
     if (!geoLocation.lat || !geoLocation.lng) {
         throw new Error('please set valid lat&lng');
     }
-    const {cache, config} = global;
     const cacheKey = `timezone_${geoLocation.lat}-${geoLocation.lng}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
@@ -27,7 +26,7 @@ async function getTimezone(geoLocation) {
         qs: {
             location: `${geoLocation.lat},${geoLocation.lng}`,
             timestamp: new Date().getTime() / 1000,
-            key: config.googleAPIKey
+            key: googleAPIKey
         }
     })
         .then(JSON.parse);
@@ -41,14 +40,14 @@ async function getTimezone(geoLocation) {
     return scraped;
 }
 
-module.exports = async (location, retryTimes) => {
+module.exports = async (location, cache, googleKey, retryTimes) => {
     let error = null;
     for (let i = 0; i < (retryTimes || 1); i++) {
         try {
             const timezone = await getTimezone({
                 lat: location.lat,
                 lng: location.lng
-            });
+            }, cache, googleKey);
             return {
                 data: timezone
             }

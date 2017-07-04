@@ -120,6 +120,11 @@ const Generator = function (options, timezoneId) {
                 data: self.config.placeId
             }
         }
+        if (options.timezone || timezoneId) {
+            self.timezone = {
+                timeZoneId: options.timezone || timezoneId
+            }
+        }
     }
     this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
     this.init();

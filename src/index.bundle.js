@@ -294,7 +294,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var getLocation = function () {
     var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(address, cache, googleKey) {
-        var cacheKey, cacheData, jsonResponse, location;
+        var cacheKey, cacheData, jsonResponse, result;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -335,22 +335,22 @@ var getLocation = function () {
 
                     case 11:
                         jsonResponse = _context.sent;
-                        location = parseLocation(jsonResponse);
+                        result = parseLocation(jsonResponse);
 
-                        if (location) {
+                        if (result) {
                             _context.next = 15;
                             break;
                         }
 
-                        throw new Error(jsonResponse.error_message || 'No results from geocode api');
+                        throw new Error(jsonResponse.error_message || 'No results from geocode api with address: \'' + address + '\'');
 
                     case 15:
-                        logger.info('Fetched location: ', location);
+                        logger.info('Fetched location: ', result);
                         _context.next = 18;
-                        return cache.setItem(cacheKey, location);
+                        return cache.setItem(cacheKey, result);
 
                     case 18:
-                        return _context.abrupt('return', location);
+                        return _context.abrupt('return', result);
 
                     case 19:
                     case 'end':
@@ -377,12 +377,30 @@ function parseLocation(res) {
         return null;
     }
 
-    return res.results[0].geometry.location;
+    return {
+        coordinates: res.results[0].geometry.location,
+        placeId: res.results[0].place_id
+    };
 }
 
+var validAddress = function validAddress(name, address) {
+    var finalAddress = address.indexOf(name) !== -1 ? address : name + ' ' + address;
+    var regrex = /[^a-z A-Z ,0-9 .]/g;
+    return finalAddress.replace(regrex, '');
+};
+
+/**
+ * @param name , the name of the place,
+ * @param address, if the address contains placeName, the response will include the valid placeId, otherwise the placeId is not the expected one
+ * need use nearbysearch api to get the real placeId
+ * @param cache
+ * @param googleKey
+ * @param retryTimes
+ * @returns {Promise.<*>}
+ */
 module.exports = function () {
-    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(address, cache, googleKey, retryTimes) {
-        var times, error, i, location;
+    var _ref2 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(name, address, cache, googleKey, retryTimes) {
+        var times, error, i, data;
         return _regenerator2.default.wrap(function _callee2$(_context2) {
             while (1) {
                 switch (_context2.prev = _context2.next) {
@@ -399,12 +417,12 @@ module.exports = function () {
 
                         _context2.prev = 4;
                         _context2.next = 7;
-                        return getLocation(address, cache, googleKey);
+                        return getLocation(validAddress(name, address), cache, googleKey);
 
                     case 7:
-                        location = _context2.sent;
+                        data = _context2.sent;
                         return _context2.abrupt('return', {
-                            data: location
+                            data: data
                         });
 
                     case 11:
@@ -441,7 +459,7 @@ module.exports = function () {
         }, _callee2, undefined, [[4, 11]]);
     }));
 
-    return function (_x4, _x5, _x6, _x7) {
+    return function (_x4, _x5, _x6, _x7, _x8) {
         return _ref2.apply(this, arguments);
     };
 }();
@@ -1077,7 +1095,7 @@ var fetchPlaceId = __webpack_require__(12);
 var fetchPlaceDetails = __webpack_require__(11);
 var fetchTimezone = __webpack_require__(13);
 var formatStore = __webpack_require__(14);
-var logger = log4js.getLogger('src/index.js');
+// const logger = log4js.getLogger('src/index.js');
 
 var checkOptions = function checkOptions(options) {
     if (!options) {
@@ -1091,6 +1109,10 @@ var checkOptions = function checkOptions(options) {
         throw new Error('retailer id is required');
     }
 
+    // if (!options.placeQuery) {
+    //     throw new Error('placeQuery is required, normally we used it as place name');
+    // }
+
     if (!options.address && !options.location) {
         throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
     }
@@ -1103,7 +1125,7 @@ var checkOptions = function checkOptions(options) {
 };
 
 var defaultOption = {
-    type: 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
+    placeTypes: 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
     queryRadius: 500, //meters
     redis: {
         host: 'localhost',
@@ -1118,7 +1140,6 @@ var defaultOption = {
 
 /**
  *
- * @param addressOrLocation address string or {lat:xxx, lng:xxx}
  * @param options
  * @param timezoneId
  * @constructor
@@ -1126,7 +1147,6 @@ var defaultOption = {
 var Generator = function Generator(options, timezoneId) {
     var self = this;
     this.init = function () {
-
         checkOptions(options);
         self.config = (0, _assign2.default)(self.config || {}, defaultOption, options);
         if (self.config.gcacheURL) {
@@ -1157,7 +1177,7 @@ var Generator = function Generator(options, timezoneId) {
         self.locale = self.config.locale;
         self.retailerId = self.config.retailerId;
         self.queryRadius = self.config.queryRadius;
-        self.placeTypes = self.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
+        self.placeTypes = self.config.placeTypes;
         if (!self.redisCache) {
             if (self.config.redisClient) {
                 self.redisCache = new RedisCache(self.config.redisClient);
@@ -1183,13 +1203,10 @@ var Generator = function Generator(options, timezoneId) {
                 data: self.config.placeId
             };
         }
-        if (options.timezone || timezoneId) {
-            self.timezone = {
-                timeZoneId: options.timezone || timezoneId
-            };
-        }
+        if (options.timezone || timezoneId) self.timezone = {
+            timeZoneId: options.timezone || timezoneId
+        };
     };
-    this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
     this.init();
     this.locale = self.config.locale;
 };
@@ -1211,7 +1228,7 @@ Generator.prototype.getLocation = (0, _asyncToGenerator3.default)(_regenerator2.
 
                 case 3:
                     _context.next = 5;
-                    return fetchLocation(self.address, self.redisCache, self.config.googleAPIKey);
+                    return fetchLocation(self.placeQuery, self.address, self.redisCache, self.config.googleAPIKey);
 
                 case 5:
                     response = _context.sent;
@@ -1221,12 +1238,26 @@ Generator.prototype.getLocation = (0, _asyncToGenerator3.default)(_regenerator2.
                             message: response.error.message
                         };
                     }
-                    if (response.data) {
-                        self.location = response;
+
+                    if (!response.data) {
+                        _context.next = 11;
+                        break;
                     }
+
+                    self.location = {
+                        data: response.data.coordinates
+                    };
+                    if (self.placeQuery && typeof self.placeQuery === 'string' && self.placeQuery.trim()) {
+                        self.placeId = {
+                            data: response.data.placeId
+                        };
+                    }
+                    return _context.abrupt('return', self.location);
+
+                case 11:
                     return _context.abrupt('return', response);
 
-                case 9:
+                case 12:
                 case 'end':
                     return _context.stop();
             }
@@ -1388,9 +1419,9 @@ Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.
 
 /**
  *
- * @param queryName , required. can be retailer id or something else
- * @param placeTypes , optional. default is 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
- * @returns {Promise.<void>}
+ * @param retailerId , required. can be retailer id or something else
+ * @param timezoneId , optional.
+ * @returns {{error}}
  */
 Generator.prototype.getFullPlace = function () {
     var _ref5 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee5(retailerId, timezoneId) {

@@ -9,7 +9,7 @@ const fetchPlaceId = require('./components/fetchPlaceId');
 const fetchPlaceDetails = require('./components/fetchPlaceDetails');
 const fetchTimezone = require('./components/fetchTimezone');
 const formatStore = require('./components/formatStore');
-const logger = log4js.getLogger('src/index.js');
+// const logger = log4js.getLogger('src/index.js');
 
 const checkOptions = (options) => {
     if (!options) {
@@ -23,6 +23,10 @@ const checkOptions = (options) => {
         throw new Error('retailer id is required');
     }
 
+    // if (!options.placeQuery) {
+    //     throw new Error('placeQuery is required, normally we used it as place name');
+    // }
+
     if (!options.address && !options.location) {
         throw new Error('Either address or location({lat:xxx, lng:xx}) is required');
     }
@@ -32,10 +36,10 @@ const checkOptions = (options) => {
     // if (!options.locale) {
     //     throw new Error('Place locale is required');
     // }
-}
+};
 
 const defaultOption = {
-    type: 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
+    placeTypes: 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
     queryRadius: 500, //meters
     redis: {
         host: 'localhost',
@@ -51,7 +55,6 @@ const defaultOption = {
 
 /**
  *
- * @param addressOrLocation address string or {lat:xxx, lng:xxx}
  * @param options
  * @param timezoneId
  * @constructor
@@ -59,7 +62,6 @@ const defaultOption = {
 const Generator = function (options, timezoneId) {
     const self = this;
     this.init = function () {
-
         checkOptions(options);
         self.config = Object.assign(self.config || {}, defaultOption, options);
         if (self.config.gcacheURL) {
@@ -94,7 +96,7 @@ const Generator = function (options, timezoneId) {
         self.locale = self.config.locale;
         self.retailerId = self.config.retailerId;
         self.queryRadius = self.config.queryRadius;
-        self.placeTypes = self.config.placeTypes || 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
+        self.placeTypes = self.config.placeTypes;
         if (!self.redisCache) {
             if (self.config.redisClient) {
                 self.redisCache = new RedisCache(self.config.redisClient);
@@ -118,35 +120,40 @@ const Generator = function (options, timezoneId) {
         if (self.config.placeId) {
             self.placeId = {
                 data: self.config.placeId
-            }
+            };
         }
-        if (options.timezone || timezoneId) {
-            self.timezone = {
-                timeZoneId: options.timezone || timezoneId
-            }
-        }
-    }
-    this.defaultPlaceTypes = 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment';
+        if (options.timezone || timezoneId) self.timezone = {
+            timeZoneId: options.timezone || timezoneId
+        };
+    };
     this.init();
     this.locale = self.config.locale;
-}
+};
 
 Generator.prototype.getLocation = async function () {
     const self = this;
     if (self.location) {
         return self.location;
     }
-    let response = await fetchLocation(self.address, self.redisCache, self.config.googleAPIKey);
+    let response = await fetchLocation(self.placeQuery, self.address, self.redisCache, self.config.googleAPIKey);
     if (response.error && response.error.message.indexOf('No results') !== -1) {
         self.location = response = {
             message: response.error.message
         }
     }
     if (response.data) {
-        self.location = response;
+        self.location = {
+            data: response.data.coordinates
+        };
+        if (self.placeQuery && typeof self.placeQuery === 'string' && self.placeQuery.trim()) {
+            self.placeId = {
+                data: response.data.placeId
+            };
+        }
+        return self.location;
     }
     return response;
-}
+};
 
 Generator.prototype.getPlaceId = async function () {
     const self = this;
@@ -168,7 +175,7 @@ Generator.prototype.getPlaceId = async function () {
         };
     }
     return response;
-}
+};
 
 Generator.prototype.getPlaceDetails = async function () {
     const self = this;
@@ -183,7 +190,7 @@ Generator.prototype.getPlaceDetails = async function () {
         self.placeDetails = response;
     }
     return response;
-}
+};
 
 Generator.prototype.getTimezone = async function () {
     const self = this;
@@ -198,14 +205,13 @@ Generator.prototype.getTimezone = async function () {
         self.timezone = response;
     }
     return response;
-}
-
+};
 
 /**
  *
- * @param queryName , required. can be retailer id or something else
- * @param placeTypes , optional. default is 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment'
- * @returns {Promise.<void>}
+ * @param retailerId , required. can be retailer id or something else
+ * @param timezoneId , optional.
+ * @returns {{error}}
  */
 Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     const self = this;
@@ -236,7 +242,7 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     }
     return Object.assign(response, self.store);
 
-}
+};
 
 Generator.prototype.execute = async function (fnName, throwError) {
     if (!fnName) {
@@ -250,6 +256,6 @@ Generator.prototype.execute = async function (fnName, throwError) {
         throw new Error(response.message || `unknown error when exec funtion ${fnName}`);
     }
     return response.data;
-}
+};
 
 module.exports = Generator;

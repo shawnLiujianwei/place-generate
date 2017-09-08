@@ -237,7 +237,9 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
             }
         }
         self.store = {
-            data: Object.assign({}, formatS)
+            data: Object.assign({}, formatS, {
+                originalAddress: self.address
+            })
         };
     }
     return Object.assign(response, self.store);

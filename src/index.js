@@ -92,6 +92,14 @@ const Generator = function (options, timezoneId) {
                 }
             });
         }
+        self.originalData = {
+            placeQuery: options.placeQuery,
+            address: options.address,
+            location: options.location,
+            placeId: options.placeId,
+            locale: options.locale,
+            retailerId: options.retailerId
+        };
         self.placeQuery = self.config.placeQuery;
         self.locale = self.config.locale;
         self.retailerId = self.config.retailerId;
@@ -238,7 +246,7 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
         }
         self.store = {
             data: Object.assign({}, formatS, {
-                originalAddress: self.address
+                originalData: self.originalData
             })
         };
     }

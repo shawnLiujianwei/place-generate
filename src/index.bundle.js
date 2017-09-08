@@ -1173,6 +1173,14 @@ var Generator = function Generator(options, timezoneId) {
                 }
             });
         }
+        self.originalData = {
+            placeQuery: options.placeQuery,
+            address: options.address,
+            location: options.location,
+            placeId: options.placeId,
+            locale: options.locale,
+            retailerId: options.retailerId
+        };
         self.placeQuery = self.config.placeQuery;
         self.locale = self.config.locale;
         self.retailerId = self.config.retailerId;
@@ -1487,7 +1495,7 @@ Generator.prototype.getFullPlace = function () {
                     case 18:
                         self.store = {
                             data: (0, _assign2.default)({}, formatS, {
-                                originalAddress: self.address
+                                originalData: self.originalData
                             })
                         };
 

@@ -385,7 +385,8 @@ function parseLocation(res) {
 
 var validAddress = function validAddress(name, address) {
     var finalAddress = address.indexOf(name) !== -1 ? address : name + ' ' + address;
-    var regrex = /[^a-z A-Z ,0-9 .]/g;
+    //const regrex = /[^a-z A-Z ,0-9 .]/g;
+    var regrex = /\//g;
     return finalAddress.replace(regrex, '');
 };
 

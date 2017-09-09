@@ -46,7 +46,8 @@ async function getLocation(address, cache, googleKey) {
 
 const validAddress = (name, address) => {
     const finalAddress = address.indexOf(name) !== -1 ? address : `${name} ${address}`;
-    const regrex = /[^a-z A-Z ,0-9 .]/g;
+    //const regrex = /[^a-z A-Z ,0-9 .]/g;
+    const regrex = /\//g;
     return finalAddress.replace(regrex, '');
 }
 

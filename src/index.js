@@ -6,6 +6,7 @@ const RedisCache = require('./components/RedisCache');
 // const geocode = require('./components/geocode');
 const fetchLocation = require('./components/fetchLocation');
 const fetchPlaceId = require('./components/fetchPlaceId');
+const searchPlaces = require('./components/searchPlace');
 const fetchPlaceDetails = require('./components/fetchPlaceDetails');
 const fetchTimezone = require('./components/fetchTimezone');
 const formatStore = require('./components/formatStore');
@@ -39,7 +40,7 @@ const checkOptions = (options) => {
 };
 
 const defaultOption = {
-    placeTypes: 'convenience_store|store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
+    placeTypes: 'store|convenience_store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
     queryRadius: 500, //meters
     redis: {
         host: 'localhost',
@@ -172,8 +173,34 @@ Generator.prototype.getPlaceId = async function () {
         throw new Error('place name is required when try to get place');
     }
     let response = await self.getLocation();
-    if (response.data) {
+    if (self.placeId) {
+        return self.placeId;
+    } else if (response.data) {
         response = await fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius, self.redisCache, self.config.googleAPIKey);
+    }
+    if (response.error &&
+        response.error.message.indexOf('No results') !== -1) {
+        self.placeId = response = {
+            data: null,
+            message: response.error.message || 'OK'
+        };
+    }
+    return response;
+};
+
+Generator.prototype.searchPlace = async function (radius) {
+    const self = this;
+    if (self.placeId) {
+        return self.placeId;
+    }
+    if (!self.placeQuery) {
+        throw new Error('place name is required when try to get place');
+    }
+    let response = await self.getLocation();
+    if (self.placeId) {
+        return self.placeId;
+    } else if (response.data) {
+        response = await searchPlaces(self.placeQuery, response.data, self.placeTypes, radius || self.queryRadius, self.redisCache, self.config.googleAPIKey);
     }
     if (response.error &&
         response.error.message.indexOf('No results') !== -1) {

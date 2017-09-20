@@ -3,11 +3,16 @@ const Promise = require('bluebird');
 const apiURL = require('./googleServerURL');
 const logger = require('log4js').getLogger('src/components/fetchPlaceId.js');
 
-function parsePlaceId(res) {
+function parsePlace(res) {
     if (!res.results.length) {
         return null;
     }
-    return res.results[0].place_id;
+    return res.results.map(t => {
+        return {
+            placeId: t.place_id,
+            location: t.geometry.location
+        }
+    });
 }
 
 /**
@@ -15,11 +20,11 @@ function parsePlaceId(res) {
  * @param store
  * @returns {*}
  */
-async function getPlaceId(name, location, type, radius, cache, googleKey) {
+async function searchPlace(name, location, type, radius, cache, googleKey) {
     if (!name || !location) {
         return Promise.reject(new Error('name and location are both required to fetch place id'));
     }
-    const cacheKey = `placeId-${name}-${JSON.stringify(location)}`;
+    const cacheKey = `radarsearch-${name}-${JSON.stringify(location)}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
         logger.info(`Using placeId cache: '${location}'`);
@@ -29,7 +34,7 @@ async function getPlaceId(name, location, type, radius, cache, googleKey) {
     const query = {
         location: `${location.lat},${location.lng}`,
         name,
-        radius: radius || '500',
+        radius: Math.min(radius || 500, 20000),
         key: googleKey
     }
     if (type) {
@@ -40,16 +45,15 @@ async function getPlaceId(name, location, type, radius, cache, googleKey) {
             query.type = type;
         }
     }
-    const res = await http.get(apiURL.placeId(), {
+    const res = await http.get(apiURL.radar(), {
         qs: query
     })
         .then(JSON.parse);
 
-    const placeId = parsePlaceId(res);
-    // logger.info(`Fetched placeId :`, placeId);
-    if (placeId) {
-        await cache.setItem(cacheKey, placeId);
-        return placeId;
+    const placeList = parsePlace(res);
+    if (placeList) {
+        await cache.setItem(cacheKey, placeList);
+        return placeList;
     }
     throw new Error(`No results from google nearbysearch with name=${name} type=${query.type || query.types}, location=${JSON.stringify(location)}`);
 }
@@ -58,9 +62,9 @@ module.exports = async (name, location, type, radius, cache, googleKey, retryTim
     let error = null;
     for (let i = 0; i < (retryTimes || 1); i++) {
         try {
-            const placeId = await  getPlaceId(name, location, type, radius, cache, googleKey);
+            const placeList = await  searchPlace(name, location, type, radius, cache, googleKey);
             return {
-                data: placeId
+                data: placeList
             }
         } catch (e) {
             if (e && e.statusCode === 400) {

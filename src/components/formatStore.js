@@ -1,14 +1,14 @@
 /**
  * Created by Shawn Liu on 17/4/19.
  */
-module.exports = (scraped, retailer1, locale) => {
+module.exports = (scraped, retailer1, locale, filterDomain) => {
     if (!scraped || !scraped.result || !retailer1) {
         throw new Error('scrapedResult, retailer are all required when format the store');
     }
     let retailer = retailer1;
     const scrapedResult = scraped.result;
-    if (scrapedResult.website && scrapedResult.website === 'docmorris-apotheke.de') {
-        scrapedResult.website = 'docmorris.de';
+    if (scrapedResult.website && scrapedResult.website.indexOf('docmorris-apotheke.de') !== -1) {
+        scrapedResult.website = scrapedResult.website.replace('docmorris-apotheke.de', 'docmorris.de');
     }
     if (retailer !== 'independent' && scrapedResult.website
         && scrapedResult.website.indexOf(retailer) === -1) {

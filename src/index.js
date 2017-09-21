@@ -49,7 +49,8 @@ const defaultOption = {
         expire: 604800 * 4 // 28 days
     },
     redisClient: null,
-    googleAPIKey: ''
+    googleAPIKey: '',
+    filterDomain: true
     // gcacheURL: 'https://gcache.evan.dotter.me'
 };
 
@@ -255,7 +256,7 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     // }
     const response = await self.getPlaceDetails();
     if (response.data) {
-        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale);
+        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain);
         if (formatS.error) {
             return {
                 error: formatS.error

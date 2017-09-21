@@ -7,6 +7,9 @@ module.exports = (scraped, retailer1, locale) => {
     }
     let retailer = retailer1;
     const scrapedResult = scraped.result;
+    if (scrapedResult.website && scrapedResult.website === 'docmorris-apotheke.de') {
+        scrapedResult.website = 'docmorris.de';
+    }
     if (retailer !== 'independent' && scrapedResult.website
         && scrapedResult.website.indexOf(retailer) === -1) {
         const msg = `Unexpected place ,

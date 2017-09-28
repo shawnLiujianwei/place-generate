@@ -1022,12 +1022,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * Created by Shawn Liu on 17/4/19.
  */
-module.exports = function (scraped, retailer1, locale) {
+module.exports = function (scraped, retailer1, locale, filterDomain) {
     if (!scraped || !scraped.result || !retailer1) {
         throw new Error('scrapedResult, retailer are all required when format the store');
     }
     var retailer = retailer1;
     var scrapedResult = scraped.result;
+    if (scrapedResult.website && scrapedResult.website.indexOf('docmorris-apotheke.de') !== -1) {
+        scrapedResult.website = scrapedResult.website.replace('docmorris-apotheke.de', 'docmorris.de');
+    }
     if (retailer !== 'independent' && scrapedResult.website && scrapedResult.website.indexOf(retailer) === -1) {
         var msg = 'Unexpected place ,\n      the expected site is ' + retailer + ', but got ' + scrapedResult.website;
         return _promise2.default.reject({
@@ -1325,7 +1328,8 @@ var defaultOption = {
         expire: 604800 * 4 // 28 days
     },
     redisClient: null,
-    googleAPIKey: ''
+    googleAPIKey: '',
+    filterDomain: true
     // gcacheURL: 'https://gcache.evan.dotter.me'
 };
 
@@ -1480,7 +1484,7 @@ Generator.prototype.getPlaceId = (0, _asyncToGenerator3.default)(_regenerator2.d
                     return _context2.abrupt('return', self.placeId);
 
                 case 3:
-                    if (self.placeQuery) {
+                    if (!(!self.placeQuery && self.retailerId !== 'independent')) {
                         _context2.next = 5;
                         break;
                     }
@@ -1726,7 +1730,7 @@ Generator.prototype.getFullPlace = function () {
                         }
 
                         _context6.next = 7;
-                        return formatStore(response.data, retailerId || self.retailerId, self.locale);
+                        return formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain);
 
                     case 7:
                         formatS = _context6.sent;

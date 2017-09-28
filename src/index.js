@@ -170,7 +170,7 @@ Generator.prototype.getPlaceId = async function () {
     if (self.placeId) {
         return self.placeId;
     }
-    if (!self.placeQuery) {
+    if (!self.placeQuery && self.retailerId !== 'independent') {
         throw new Error('place name is required when try to get place');
     }
     let response = await self.getLocation();

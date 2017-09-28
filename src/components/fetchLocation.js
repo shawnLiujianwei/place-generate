@@ -8,9 +8,20 @@ function parseLocation(res) {
         return null;
     }
 
+    const store = res.results[0];
+    const coordinates = store.geometry.location;
+    // const formattedAddress = store.formatted_address;
+    const placeId = coordinates.place_id;
+    if (store.types[0] === 'street_address') {
+        return {
+            coordinates
+            // formattedAddress
+        }
+    }
     return {
-        coordinates: res.results[0].geometry.location,
-        placeId: res.results[0].place_id
+        coordinates,
+        // formattedAddress,
+        placeId
     };
 }
 

@@ -377,9 +377,20 @@ function parseLocation(res) {
         return null;
     }
 
+    var store = res.results[0];
+    var coordinates = store.geometry.location;
+    // const formattedAddress = store.formatted_address;
+    var placeId = coordinates.place_id;
+    if (store.types[0] === 'street_address') {
+        return {
+            coordinates: coordinates
+            // formattedAddress
+        };
+    }
     return {
-        coordinates: res.results[0].geometry.location,
-        placeId: res.results[0].place_id
+        coordinates: coordinates,
+        // formattedAddress,
+        placeId: placeId
     };
 }
 
@@ -1373,11 +1384,11 @@ var Generator = function Generator(options, timezoneId) {
             address: options.address,
             location: options.location,
             placeId: options.placeId,
-            locale: options.locale,
+            // locale: options.locale,
             retailerId: options.retailerId
         };
         self.placeQuery = self.config.placeQuery;
-        self.locale = self.config.locale;
+        // self.locale = self.config.locale;
         self.retailerId = self.config.retailerId;
         self.queryRadius = self.config.queryRadius;
         self.placeTypes = self.config.placeTypes;
@@ -1443,24 +1454,25 @@ Generator.prototype.getLocation = (0, _asyncToGenerator3.default)(_regenerator2.
                     }
 
                     if (!response.data) {
-                        _context.next = 11;
+                        _context.next = 12;
                         break;
                     }
 
                     self.location = {
                         data: response.data.coordinates
                     };
-                    if (self.placeQuery && typeof self.placeQuery === 'string' && self.placeQuery.trim()) {
+                    if (response.data.placeId) {
                         self.placeId = {
                             data: response.data.placeId
                         };
                     }
+                    self.formattedAddress = response.data.formattedAddress;
                     return _context.abrupt('return', self.location);
 
-                case 11:
+                case 12:
                     return _context.abrupt('return', response);
 
-                case 12:
+                case 13:
                 case 'end':
                     return _context.stop();
             }
@@ -1468,54 +1480,114 @@ Generator.prototype.getLocation = (0, _asyncToGenerator3.default)(_regenerator2.
     }, _callee, this);
 }));
 
-Generator.prototype.getPlaceId = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2() {
-    var self, response;
+// get place country in English
+Generator.prototype.getPlaceCountry = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2() {
+    var self, getCountry, response, placeDetails, country;
     return _regenerator2.default.wrap(function _callee2$(_context2) {
         while (1) {
             switch (_context2.prev = _context2.next) {
                 case 0:
                     self = this;
 
-                    if (!self.placeId) {
+                    if (!self.placeCountry) {
                         _context2.next = 3;
                         break;
                     }
 
-                    return _context2.abrupt('return', self.placeId);
+                    return _context2.abrupt('return', self.placeCountry);
+
+                case 3:
+                    getCountry = function getCountry(formattedAddress) {
+                        var lastSpace = formattedAddress.lastIndexOf(',');
+                        var country = formattedAddress.substring(lastSpace + 1);
+                        if (!country) {
+                            throw new Error('failed to extract countr from formatted address: ' + formattedAddress);
+                        }
+                        return country.trim();
+                    };
+                    //1 when fetch location from address , can get formatted adderss , that can extract country
+
+
+                    if (!self.formattedAddress) {
+                        _context2.next = 7;
+                        break;
+                    }
+
+                    self.placeCountry = getCountry(self.formattedAddress);
+                    return _context2.abrupt('return', self.placeCountry);
+
+                case 7:
+                    _context2.next = 9;
+                    return self.getPlaceId();
+
+                case 9:
+                    response = _context2.sent;
+                    _context2.next = 12;
+                    return fetchPlaceDetails(response.data, 'en_us', self.redisCache, self.config.googleAPIKey);
+
+                case 12:
+                    placeDetails = _context2.sent;
+                    country = getCountry(placeDetails.data.result.formatted_address);
+
+                    self.placeCountry = country;
+                    return _context2.abrupt('return', self.placeCountry);
+
+                case 16:
+                case 'end':
+                    return _context2.stop();
+            }
+        }
+    }, _callee2, this);
+}));
+
+Generator.prototype.getPlaceId = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee3() {
+    var self, response;
+    return _regenerator2.default.wrap(function _callee3$(_context3) {
+        while (1) {
+            switch (_context3.prev = _context3.next) {
+                case 0:
+                    self = this;
+
+                    if (!self.placeId) {
+                        _context3.next = 3;
+                        break;
+                    }
+
+                    return _context3.abrupt('return', self.placeId);
 
                 case 3:
                     if (!(!self.placeQuery && self.retailerId !== 'independent')) {
-                        _context2.next = 5;
+                        _context3.next = 5;
                         break;
                     }
 
                     throw new Error('place name is required when try to get place');
 
                 case 5:
-                    _context2.next = 7;
+                    _context3.next = 7;
                     return self.getLocation();
 
                 case 7:
-                    response = _context2.sent;
+                    response = _context3.sent;
 
                     if (!self.placeId) {
-                        _context2.next = 12;
+                        _context3.next = 12;
                         break;
                     }
 
-                    return _context2.abrupt('return', self.placeId);
+                    return _context3.abrupt('return', self.placeId);
 
                 case 12:
                     if (!response.data) {
-                        _context2.next = 16;
+                        _context3.next = 16;
                         break;
                     }
 
-                    _context2.next = 15;
+                    _context3.next = 15;
                     return fetchPlaceId(self.placeQuery, response.data, self.placeTypes, self.queryRadius, self.redisCache, self.config.googleAPIKey);
 
                 case 15:
-                    response = _context2.sent;
+                    response = _context3.sent;
 
                 case 16:
                     if (response.error && response.error.message.indexOf('No results') !== -1) {
@@ -1524,65 +1596,65 @@ Generator.prototype.getPlaceId = (0, _asyncToGenerator3.default)(_regenerator2.d
                             message: response.error.message || 'OK'
                         };
                     }
-                    return _context2.abrupt('return', response);
+                    return _context3.abrupt('return', response);
 
                 case 18:
                 case 'end':
-                    return _context2.stop();
+                    return _context3.stop();
             }
         }
-    }, _callee2, this);
+    }, _callee3, this);
 }));
 
 Generator.prototype.searchPlace = function () {
-    var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee3(radius) {
+    var _ref4 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee4(radius) {
         var self, response;
-        return _regenerator2.default.wrap(function _callee3$(_context3) {
+        return _regenerator2.default.wrap(function _callee4$(_context4) {
             while (1) {
-                switch (_context3.prev = _context3.next) {
+                switch (_context4.prev = _context4.next) {
                     case 0:
                         self = this;
 
                         if (!self.placeId) {
-                            _context3.next = 3;
+                            _context4.next = 3;
                             break;
                         }
 
-                        return _context3.abrupt('return', self.placeId);
+                        return _context4.abrupt('return', self.placeId);
 
                     case 3:
                         if (self.placeQuery) {
-                            _context3.next = 5;
+                            _context4.next = 5;
                             break;
                         }
 
                         throw new Error('place name is required when try to get place');
 
                     case 5:
-                        _context3.next = 7;
+                        _context4.next = 7;
                         return self.getLocation();
 
                     case 7:
-                        response = _context3.sent;
+                        response = _context4.sent;
 
                         if (!self.placeId) {
-                            _context3.next = 12;
+                            _context4.next = 12;
                             break;
                         }
 
-                        return _context3.abrupt('return', self.placeId);
+                        return _context4.abrupt('return', self.placeId);
 
                     case 12:
                         if (!response.data) {
-                            _context3.next = 16;
+                            _context4.next = 16;
                             break;
                         }
 
-                        _context3.next = 15;
+                        _context4.next = 15;
                         return searchPlaces(self.placeQuery, response.data, self.placeTypes, radius || self.queryRadius, self.redisCache, self.config.googleAPIKey);
 
                     case 15:
-                        response = _context3.sent;
+                        response = _context4.sent;
 
                     case 16:
                         if (response.error && response.error.message.indexOf('No results') !== -1) {
@@ -1591,69 +1663,22 @@ Generator.prototype.searchPlace = function () {
                                 message: response.error.message || 'OK'
                             };
                         }
-                        return _context3.abrupt('return', response);
+                        return _context4.abrupt('return', response);
 
                     case 18:
                     case 'end':
-                        return _context3.stop();
+                        return _context4.stop();
                 }
             }
-        }, _callee3, this);
+        }, _callee4, this);
     }));
 
     return function (_x) {
-        return _ref3.apply(this, arguments);
+        return _ref4.apply(this, arguments);
     };
 }();
 
-Generator.prototype.getPlaceDetails = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee4() {
-    var self, response;
-    return _regenerator2.default.wrap(function _callee4$(_context4) {
-        while (1) {
-            switch (_context4.prev = _context4.next) {
-                case 0:
-                    self = this;
-
-                    if (!self.placeDetails) {
-                        _context4.next = 3;
-                        break;
-                    }
-
-                    return _context4.abrupt('return', self.placeDetails);
-
-                case 3:
-                    _context4.next = 5;
-                    return self.getPlaceId();
-
-                case 5:
-                    response = _context4.sent;
-
-                    if (!response.data) {
-                        _context4.next = 10;
-                        break;
-                    }
-
-                    _context4.next = 9;
-                    return fetchPlaceDetails(response.data, self.locale, self.redisCache, self.config.googleAPIKey);
-
-                case 9:
-                    response = _context4.sent;
-
-                case 10:
-                    if (response.data) {
-                        self.placeDetails = response;
-                    }
-                    return _context4.abrupt('return', response);
-
-                case 12:
-                case 'end':
-                    return _context4.stop();
-            }
-        }
-    }, _callee4, this);
-}));
-
-Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee5() {
+Generator.prototype.getPlaceDetails = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee5() {
     var self, response;
     return _regenerator2.default.wrap(function _callee5$(_context5) {
         while (1) {
@@ -1661,16 +1686,16 @@ Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.
                 case 0:
                     self = this;
 
-                    if (!self.timezone) {
+                    if (!self.placeDetails) {
                         _context5.next = 3;
                         break;
                     }
 
-                    return _context5.abrupt('return', self.timezone);
+                    return _context5.abrupt('return', self.placeDetails);
 
                 case 3:
                     _context5.next = 5;
-                    return self.getLocation();
+                    return self.getPlaceId();
 
                 case 5:
                     response = _context5.sent;
@@ -1681,14 +1706,14 @@ Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.
                     }
 
                     _context5.next = 9;
-                    return fetchTimezone(response.data, self.redisCache, self.config.googleAPIKey);
+                    return fetchPlaceDetails(response.data, self.locale, self.redisCache, self.config.googleAPIKey);
 
                 case 9:
                     response = _context5.sent;
 
                 case 10:
                     if (response.data) {
-                        self.timezone = response;
+                        self.placeDetails = response;
                     }
                     return _context5.abrupt('return', response);
 
@@ -1700,6 +1725,53 @@ Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.
     }, _callee5, this);
 }));
 
+Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee6() {
+    var self, response;
+    return _regenerator2.default.wrap(function _callee6$(_context6) {
+        while (1) {
+            switch (_context6.prev = _context6.next) {
+                case 0:
+                    self = this;
+
+                    if (!self.timezone) {
+                        _context6.next = 3;
+                        break;
+                    }
+
+                    return _context6.abrupt('return', self.timezone);
+
+                case 3:
+                    _context6.next = 5;
+                    return self.getLocation();
+
+                case 5:
+                    response = _context6.sent;
+
+                    if (!response.data) {
+                        _context6.next = 10;
+                        break;
+                    }
+
+                    _context6.next = 9;
+                    return fetchTimezone(response.data, self.redisCache, self.config.googleAPIKey);
+
+                case 9:
+                    response = _context6.sent;
+
+                case 10:
+                    if (response.data) {
+                        self.timezone = response;
+                    }
+                    return _context6.abrupt('return', response);
+
+                case 12:
+                case 'end':
+                    return _context6.stop();
+            }
+        }
+    }, _callee6, this);
+}));
+
 /**
  *
  * @param retailerId , required. can be retailer id or something else
@@ -1707,61 +1779,61 @@ Generator.prototype.getTimezone = (0, _asyncToGenerator3.default)(_regenerator2.
  * @returns {{error}}
  */
 Generator.prototype.getFullPlace = function () {
-    var _ref6 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee6(retailerId, timezoneId) {
-        var self, response, formatS, timezone;
-        return _regenerator2.default.wrap(function _callee6$(_context6) {
+    var _ref7 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee7(retailerId, timezoneId) {
+        var self, response, formatS, timezone, placeCountry;
+        return _regenerator2.default.wrap(function _callee7$(_context7) {
             while (1) {
-                switch (_context6.prev = _context6.next) {
+                switch (_context7.prev = _context7.next) {
                     case 0:
                         self = this;
                         // if (self.store) {
                         //     return self.store;
                         // }
 
-                        _context6.next = 3;
+                        _context7.next = 3;
                         return self.getPlaceDetails();
 
                     case 3:
-                        response = _context6.sent;
+                        response = _context7.sent;
 
                         if (!response.data) {
-                            _context6.next = 19;
+                            _context7.next = 19;
                             break;
                         }
 
-                        _context6.next = 7;
+                        _context7.next = 7;
                         return formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain);
 
                     case 7:
-                        formatS = _context6.sent;
+                        formatS = _context7.sent;
 
                         if (!formatS.error) {
-                            _context6.next = 10;
+                            _context7.next = 10;
                             break;
                         }
 
-                        return _context6.abrupt('return', {
+                        return _context7.abrupt('return', {
                             error: formatS.error
                         });
 
                     case 10:
                         if (!timezoneId) {
-                            _context6.next = 14;
+                            _context7.next = 14;
                             break;
                         }
 
                         formatS.timezone = {
                             timeZoneId: timezoneId
                         };
-                        _context6.next = 18;
+                        _context7.next = 18;
                         break;
 
                     case 14:
-                        _context6.next = 16;
+                        _context7.next = 16;
                         return self.getTimezone();
 
                     case 16:
-                        timezone = _context6.sent;
+                        timezone = _context7.sent;
 
                         if (timezone.data) {
                             formatS.timezone = timezone.data;
@@ -1775,61 +1847,23 @@ Generator.prototype.getFullPlace = function () {
                         };
 
                     case 19:
-                        return _context6.abrupt('return', (0, _assign2.default)(response, self.store));
-
-                    case 20:
-                    case 'end':
-                        return _context6.stop();
-                }
-            }
-        }, _callee6, this);
-    }));
-
-    return function (_x2, _x3) {
-        return _ref6.apply(this, arguments);
-    };
-}();
-
-Generator.prototype.execute = function () {
-    var _ref7 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee7(fnName, throwError) {
-        var response;
-        return _regenerator2.default.wrap(function _callee7$(_context7) {
-            while (1) {
-                switch (_context7.prev = _context7.next) {
-                    case 0:
-                        if (fnName) {
-                            _context7.next = 2;
+                        if (!self.config.validateCountry) {
+                            _context7.next = 24;
                             break;
                         }
 
-                        throw new Error("Function name is required");
+                        _context7.next = 22;
+                        return self.getPlaceCountry();
 
-                    case 2:
-                        _context7.next = 4;
-                        return this[fnName]();
+                    case 22:
+                        placeCountry = _context7.sent;
 
-                    case 4:
-                        response = _context7.sent;
+                        self.store.country = placeCountry;
 
-                        if (!response.error) {
-                            _context7.next = 7;
-                            break;
-                        }
+                    case 24:
+                        return _context7.abrupt('return', self.store);
 
-                        throw response.error;
-
-                    case 7:
-                        if (!(throwError && !response.data)) {
-                            _context7.next = 9;
-                            break;
-                        }
-
-                        throw new Error(response.message || 'unknown error when exec funtion ' + fnName);
-
-                    case 9:
-                        return _context7.abrupt('return', response.data);
-
-                    case 10:
+                    case 25:
                     case 'end':
                         return _context7.stop();
                 }
@@ -1837,8 +1871,60 @@ Generator.prototype.execute = function () {
         }, _callee7, this);
     }));
 
-    return function (_x4, _x5) {
+    return function (_x2, _x3) {
         return _ref7.apply(this, arguments);
+    };
+}();
+
+Generator.prototype.execute = function () {
+    var _ref8 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee8(fnName, throwError) {
+        var response;
+        return _regenerator2.default.wrap(function _callee8$(_context8) {
+            while (1) {
+                switch (_context8.prev = _context8.next) {
+                    case 0:
+                        if (fnName) {
+                            _context8.next = 2;
+                            break;
+                        }
+
+                        throw new Error("Function name is required");
+
+                    case 2:
+                        _context8.next = 4;
+                        return this[fnName]();
+
+                    case 4:
+                        response = _context8.sent;
+
+                        if (!response.error) {
+                            _context8.next = 7;
+                            break;
+                        }
+
+                        throw response.error;
+
+                    case 7:
+                        if (!(throwError && !response.data)) {
+                            _context8.next = 9;
+                            break;
+                        }
+
+                        throw new Error(response.message || 'unknown error when exec funtion ' + fnName);
+
+                    case 9:
+                        return _context8.abrupt('return', response.data);
+
+                    case 10:
+                    case 'end':
+                        return _context8.stop();
+                }
+            }
+        }, _callee8, this);
+    }));
+
+    return function (_x4, _x5) {
+        return _ref8.apply(this, arguments);
     };
 }();
 

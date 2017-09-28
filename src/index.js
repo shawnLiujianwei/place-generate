@@ -99,11 +99,11 @@ const Generator = function (options, timezoneId) {
             address: options.address,
             location: options.location,
             placeId: options.placeId,
-            locale: options.locale,
+            // locale: options.locale,
             retailerId: options.retailerId
         };
         self.placeQuery = self.config.placeQuery;
-        self.locale = self.config.locale;
+        // self.locale = self.config.locale;
         self.retailerId = self.config.retailerId;
         self.queryRadius = self.config.queryRadius;
         self.placeTypes = self.config.placeTypes;
@@ -155,14 +155,41 @@ Generator.prototype.getLocation = async function () {
         self.location = {
             data: response.data.coordinates
         };
-        if (self.placeQuery && typeof self.placeQuery === 'string' && self.placeQuery.trim()) {
+        if (response.data.placeId) {
             self.placeId = {
                 data: response.data.placeId
             };
         }
+        self.formattedAddress = response.data.formattedAddress;
         return self.location;
     }
     return response;
+};
+
+// get place country in English
+Generator.prototype.getPlaceCountry = async function () {
+    const self = this;
+    if (self.placeCountry) {
+        return self.placeCountry;
+    }
+    const getCountry = formattedAddress => {
+        const lastSpace = formattedAddress.lastIndexOf(',');
+        const country = formattedAddress.substring(lastSpace + 1);
+        if (!country) {
+            throw new Error(`failed to extract countr from formatted address: ${formattedAddress}`);
+        }
+        return country.trim();
+    }
+    //1 when fetch location from address , can get formatted adderss , that can extract country
+    if (self.formattedAddress) {
+        self.placeCountry = getCountry(self.formattedAddress);
+        return self.placeCountry;
+    }
+    const response = await self.getPlaceId();
+    const placeDetails = await  fetchPlaceDetails(response.data, 'en_us', self.redisCache, self.config.googleAPIKey);
+    const country = getCountry(placeDetails.data.result.formatted_address);
+    self.placeCountry = country;
+    return self.placeCountry;
 };
 
 Generator.prototype.getPlaceId = async function () {
@@ -278,8 +305,11 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
             })
         };
     }
-    return Object.assign(response, self.store);
-
+    if (self.config.validateCountry) {
+        const placeCountry = await self.getPlaceCountry();
+        self.store.country = placeCountry;
+    }
+    return self.store;
 };
 
 Generator.prototype.execute = async function (fnName, throwError) {

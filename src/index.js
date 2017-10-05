@@ -304,11 +304,12 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
                 originalData: self.originalData
             })
         };
+        if (self.config.validateCountry) {
+            const placeCountry = await self.getPlaceCountry();
+            self.store.data.country = placeCountry;
+        }
     }
-    if (self.config.validateCountry) {
-        const placeCountry = await self.getPlaceCountry();
-        self.store.country = placeCountry;
-    }
+
     return self.store;
 };
 

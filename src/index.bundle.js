@@ -1797,7 +1797,7 @@ Generator.prototype.getFullPlace = function () {
                         response = _context7.sent;
 
                         if (!response.data) {
-                            _context7.next = 19;
+                            _context7.next = 24;
                             break;
                         }
 
@@ -1846,7 +1846,6 @@ Generator.prototype.getFullPlace = function () {
                             })
                         };
 
-                    case 19:
                         if (!self.config.validateCountry) {
                             _context7.next = 24;
                             break;
@@ -1858,7 +1857,7 @@ Generator.prototype.getFullPlace = function () {
                     case 22:
                         placeCountry = _context7.sent;
 
-                        self.store.country = placeCountry;
+                        self.store.data.country = placeCountry;
 
                     case 24:
                         return _context7.abrupt('return', self.store);

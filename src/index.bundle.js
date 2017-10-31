@@ -679,7 +679,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
  * @returns {*}
  */
 var getPlaceId = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, type, radius, cache, googleKey) {
+    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, types, radius, cache, googleKey) {
         var query, cacheKey, cacheData, res, placeId;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
@@ -699,7 +699,8 @@ var getPlaceId = function () {
                             location: location.lat + ',' + location.lng,
                             name: name,
                             radius: radius || '500',
-                            key: googleKey
+                            key: googleKey,
+                            type: types[0] || types
                         };
                         cacheKey = 'placeId-' + (0, _stringify2.default)((0, _assign2.default)({}, query, { key: null }));
                         _context.next = 6;
@@ -1144,6 +1145,7 @@ var searchPlace = function () {
                             name: name,
                             radius: Math.min(radius || 500, 20000),
                             key: googleKey,
+                            // type:types[0]
                             type: types[0]
                         };
                         cacheKey = 'radarsearch-' + (0, _stringify2.default)((0, _assign2.default)({}, query, { key: null }));
@@ -1343,7 +1345,7 @@ var checkOptions = function checkOptions(options) {
 };
 
 var defaultOption = {
-    placeTypes: 'store|convenience_store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
+    placeTypes: ['store'],
     queryRadius: 500, //meters
     redis: {
         host: 'localhost',

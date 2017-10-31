@@ -1,7 +1,7 @@
 /**
  * Created by Shawn Liu on 17/4/19.
  */
-module.exports = (scraped, retailer1, locale, filterDomain) => {
+module.exports = (scraped, retailer1, locale, filterDomain, excluedKeys) => {
     if (!scraped || !scraped.result || !retailer1) {
         throw new Error('scrapedResult, retailer are all required when format the store');
     }
@@ -10,6 +10,7 @@ module.exports = (scraped, retailer1, locale, filterDomain) => {
     if (scrapedResult.website && scrapedResult.website.indexOf('docmorris-apotheke.de') !== -1) {
         scrapedResult.website = scrapedResult.website.replace('docmorris-apotheke.de', 'docmorris.de');
     }
+
     if (retailer !== 'independent' && scrapedResult.website
         && scrapedResult.website.indexOf(retailer) === -1) {
         const msg = `Unexpected place ,
@@ -20,6 +21,15 @@ module.exports = (scraped, retailer1, locale, filterDomain) => {
             placeId: scrapedResult.place_id,
             type: 'unexpected'
         });
+    }
+    if (scrapedResult.website && excluedKeys && excluedKeys.length) {
+        const boolean = excluedKeys.some(t => website.indexOf(t) !== -1);
+        if (boolean) {
+            return Promise.reject({
+                status: 'error',
+                message: `place in the excludedKeys:${excluedKeys}`
+            });
+        }
     }
     // TODO
     const geometry = scrapedResult.geometry;

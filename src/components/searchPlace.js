@@ -35,16 +35,17 @@ async function searchPlace(name, location, type, radius, cache, googleKey) {
         location: `${location.lat},${location.lng}`,
         name,
         radius: Math.min(radius || 500, 20000),
-        key: googleKey
+        key: googleKey,
+        type
     }
-    if (type) {
-        if (type.indexOf('|') !== -1) {
-            query.type = type.split('|')[0];
-        } else {
-
-            query.type = type;
-        }
-    }
+    // if (type) {
+    //     if (type.indexOf('|') !== -1) {
+    //         query.type = type.split('|')[0];
+    //     } else {
+    //
+    //         query.type = type;
+    //     }
+    // }
     const res = await http.get(apiURL.radar(), {
         qs: query
     })

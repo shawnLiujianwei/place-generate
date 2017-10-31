@@ -107,6 +107,7 @@ const Generator = function (options, timezoneId) {
         self.retailerId = self.config.retailerId;
         self.queryRadius = self.config.queryRadius;
         self.placeTypes = self.config.placeTypes;
+        self.excludedKeys = self.config.excludedKeys;
         if (!self.redisCache) {
             if (self.config.redisClient) {
                 self.redisCache = new RedisCache(self.config.redisClient);
@@ -187,8 +188,10 @@ Generator.prototype.getPlaceCountry = async function () {
     }
     const response = await self.getPlaceId();
     const placeDetails = await  fetchPlaceDetails(response.data, 'en_us', self.redisCache, self.config.googleAPIKey);
-    const country = getCountry(placeDetails.data.result.formatted_address);
-    self.placeCountry = country;
+    if(placeDetails && placeDetails.data) {
+        const country = getCountry(placeDetails.data.result.formatted_address);
+        self.placeCountry = country;
+    }
     return self.placeCountry;
 };
 
@@ -283,7 +286,7 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     // }
     const response = await self.getPlaceDetails();
     if (response.data) {
-        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain);
+        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain,self.excludedKeys);
         if (formatS.error) {
             return {
                 error: formatS.error

@@ -20,23 +20,25 @@ function parsePlace(res) {
  * @param store
  * @returns {*}
  */
-async function searchPlace(name, location, type, radius, cache, googleKey) {
+async function searchPlace(name, location, types, radius, cache, googleKey) {
     if (!name || !location) {
         return Promise.reject(new Error('name and location are both required to fetch place id'));
     }
-    const cacheKey = `radarsearch-${name}-${JSON.stringify(location)}`;
-    const cacheData = await cache.getItem(cacheKey);
-    if (cacheData && cacheData !== {}) {
-        logger.info(`Using placeId cache: '${location}'`);
-        return cacheData;
-    }
+
     // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
     const query = {
         location: `${location.lat},${location.lng}`,
         name,
         radius: Math.min(radius || 500, 20000),
         key: googleKey,
-        type
+        // type:types[0]
+        type: types[0]
+    }
+    const cacheKey = `radarsearch-${JSON.stringify(Object.assign({},query,{key:null}))}`;
+    const cacheData = await cache.getItem(cacheKey);
+    if (cacheData && cacheData !== {}) {
+        logger.info(`Using placeId cache: '${location}'`);
+        return cacheData;
     }
     // if (type) {
     //     if (type.indexOf('|') !== -1) {

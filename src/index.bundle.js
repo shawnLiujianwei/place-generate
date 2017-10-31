@@ -135,13 +135,13 @@ module.exports = require("request-promise");
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = require("babel-runtime/core-js/json/stringify");
+module.exports = require("babel-runtime/core-js/object/assign");
 
 /***/ }),
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = require("babel-runtime/core-js/object/assign");
+module.exports = require("babel-runtime/core-js/json/stringify");
 
 /***/ }),
 /* 8 */
@@ -168,11 +168,11 @@ var _asyncToGenerator2 = __webpack_require__(0);
 
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
-var _stringify = __webpack_require__(6);
+var _stringify = __webpack_require__(7);
 
 var _stringify2 = _interopRequireDefault(_stringify);
 
-var _assign = __webpack_require__(7);
+var _assign = __webpack_require__(6);
 
 var _assign2 = _interopRequireDefault(_assign);
 
@@ -661,7 +661,11 @@ var _regenerator = __webpack_require__(1);
 
 var _regenerator2 = _interopRequireDefault(_regenerator);
 
-var _stringify = __webpack_require__(6);
+var _assign = __webpack_require__(6);
+
+var _assign2 = _interopRequireDefault(_assign);
+
+var _stringify = __webpack_require__(7);
 
 var _stringify2 = _interopRequireDefault(_stringify);
 
@@ -676,7 +680,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
  */
 var getPlaceId = function () {
     var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, type, radius, cache, googleKey) {
-        var cacheKey, cacheData, query, res, placeId;
+        var query, cacheKey, cacheData, res, placeId;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -689,22 +693,7 @@ var getPlaceId = function () {
                         return _context.abrupt('return', Promise.reject(new Error('name and location are both required to fetch place id')));
 
                     case 2:
-                        cacheKey = 'placeId-' + name + '-' + (0, _stringify2.default)(location);
-                        _context.next = 5;
-                        return cache.getItem(cacheKey);
 
-                    case 5:
-                        cacheData = _context.sent;
-
-                        if (!(cacheData && cacheData !== {})) {
-                            _context.next = 9;
-                            break;
-                        }
-
-                        logger.info('Using placeId cache: \'' + location + '\'');
-                        return _context.abrupt('return', cacheData);
-
-                    case 9:
                         // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
                         query = {
                             location: location.lat + ',' + location.lng,
@@ -712,7 +701,22 @@ var getPlaceId = function () {
                             radius: radius || '500',
                             key: googleKey
                         };
+                        cacheKey = 'placeId-' + (0, _stringify2.default)((0, _assign2.default)({}, query, { key: null }));
+                        _context.next = 6;
+                        return cache.getItem(cacheKey);
 
+                    case 6:
+                        cacheData = _context.sent;
+
+                        if (!(cacheData && cacheData !== {})) {
+                            _context.next = 10;
+                            break;
+                        }
+
+                        logger.info('Using placeId cache: \'' + location + '\'');
+                        return _context.abrupt('return', cacheData);
+
+                    case 10:
                         if (type) {
                             if (type.indexOf('|') !== -1) {
                                 query.type = type.split('|')[0];
@@ -1033,7 +1037,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * Created by Shawn Liu on 17/4/19.
  */
-module.exports = function (scraped, retailer1, locale, filterDomain) {
+module.exports = function (scraped, retailer1, locale, filterDomain, excluedKeys) {
     if (!scraped || !scraped.result || !retailer1) {
         throw new Error('scrapedResult, retailer are all required when format the store');
     }
@@ -1042,6 +1046,7 @@ module.exports = function (scraped, retailer1, locale, filterDomain) {
     if (scrapedResult.website && scrapedResult.website.indexOf('docmorris-apotheke.de') !== -1) {
         scrapedResult.website = scrapedResult.website.replace('docmorris-apotheke.de', 'docmorris.de');
     }
+
     if (retailer !== 'independent' && scrapedResult.website && scrapedResult.website.indexOf(retailer) === -1) {
         var msg = 'Unexpected place ,\n      the expected site is ' + retailer + ', but got ' + scrapedResult.website;
         return _promise2.default.reject({
@@ -1050,6 +1055,17 @@ module.exports = function (scraped, retailer1, locale, filterDomain) {
             placeId: scrapedResult.place_id,
             type: 'unexpected'
         });
+    }
+    if (scrapedResult.website && excluedKeys && excluedKeys.length) {
+        var boolean = excluedKeys.some(function (t) {
+            return website.indexOf(t) !== -1;
+        });
+        if (boolean) {
+            return _promise2.default.reject({
+                status: 'error',
+                message: 'place in the excludedKeys:' + excluedKeys
+            });
+        }
     }
     // TODO
     var geometry = scrapedResult.geometry;
@@ -1089,7 +1105,11 @@ var _regenerator = __webpack_require__(1);
 
 var _regenerator2 = _interopRequireDefault(_regenerator);
 
-var _stringify = __webpack_require__(6);
+var _assign = __webpack_require__(6);
+
+var _assign2 = _interopRequireDefault(_assign);
+
+var _stringify = __webpack_require__(7);
 
 var _stringify2 = _interopRequireDefault(_stringify);
 
@@ -1103,8 +1123,8 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
  * @returns {*}
  */
 var searchPlace = function () {
-    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, type, radius, cache, googleKey) {
-        var cacheKey, cacheData, query, res, placeList;
+    var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(name, location, types, radius, cache, googleKey) {
+        var query, cacheKey, cacheData, res, placeList;
         return _regenerator2.default.wrap(function _callee$(_context) {
             while (1) {
                 switch (_context.prev = _context.next) {
@@ -1117,62 +1137,55 @@ var searchPlace = function () {
                         return _context.abrupt('return', Promise.reject(new Error('name and location are both required to fetch place id')));
 
                     case 2:
-                        cacheKey = 'radarsearch-' + name + '-' + (0, _stringify2.default)(location);
-                        _context.next = 5;
+
+                        // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
+                        query = {
+                            location: location.lat + ',' + location.lng,
+                            name: name,
+                            radius: Math.min(radius || 500, 20000),
+                            key: googleKey,
+                            type: types[0]
+                        };
+                        cacheKey = 'radarsearch-' + (0, _stringify2.default)((0, _assign2.default)({}, query, { key: null }));
+                        _context.next = 6;
                         return cache.getItem(cacheKey);
 
-                    case 5:
+                    case 6:
                         cacheData = _context.sent;
 
                         if (!(cacheData && cacheData !== {})) {
-                            _context.next = 9;
+                            _context.next = 10;
                             break;
                         }
 
                         logger.info('Using placeId cache: \'' + location + '\'');
                         return _context.abrupt('return', cacheData);
 
-                    case 9:
-                        // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
-                        query = {
-                            location: location.lat + ',' + location.lng,
-                            name: name,
-                            radius: Math.min(radius || 500, 20000),
-                            key: googleKey
-                        };
-
-                        if (type) {
-                            if (type.indexOf('|') !== -1) {
-                                query.type = type.split('|')[0];
-                            } else {
-
-                                query.type = type;
-                            }
-                        }
-                        _context.next = 13;
+                    case 10:
+                        _context.next = 12;
                         return http.get(apiURL.radar(), {
                             qs: query
                         }).then(JSON.parse);
 
-                    case 13:
+                    case 12:
                         res = _context.sent;
                         placeList = parsePlace(res);
 
                         if (!placeList) {
-                            _context.next = 19;
+                            _context.next = 18;
                             break;
                         }
 
-                        _context.next = 18;
+                        _context.next = 17;
                         return cache.setItem(cacheKey, placeList);
 
-                    case 18:
+                    case 17:
                         return _context.abrupt('return', placeList);
 
-                    case 19:
+                    case 18:
                         throw new Error('No results from google nearbysearch with name=' + name + ' type=' + (query.type || query.types) + ', location=' + (0, _stringify2.default)(location));
 
-                    case 20:
+                    case 19:
                     case 'end':
                         return _context.stop();
                 }
@@ -1282,7 +1295,7 @@ var _asyncToGenerator2 = __webpack_require__(0);
 
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
-var _assign = __webpack_require__(7);
+var _assign = __webpack_require__(6);
 
 var _assign2 = _interopRequireDefault(_assign);
 
@@ -1392,6 +1405,7 @@ var Generator = function Generator(options, timezoneId) {
         self.retailerId = self.config.retailerId;
         self.queryRadius = self.config.queryRadius;
         self.placeTypes = self.config.placeTypes;
+        self.excludedKeys = self.config.excludedKeys;
         if (!self.redisCache) {
             if (self.config.redisClient) {
                 self.redisCache = new RedisCache(self.config.redisClient);
@@ -1527,12 +1541,15 @@ Generator.prototype.getPlaceCountry = (0, _asyncToGenerator3.default)(_regenerat
 
                 case 12:
                     placeDetails = _context2.sent;
-                    country = getCountry(placeDetails.data.result.formatted_address);
 
-                    self.placeCountry = country;
+                    if (placeDetails && placeDetails.data) {
+                        country = getCountry(placeDetails.data.result.formatted_address);
+
+                        self.placeCountry = country;
+                    }
                     return _context2.abrupt('return', self.placeCountry);
 
-                case 16:
+                case 15:
                 case 'end':
                     return _context2.stop();
             }
@@ -1802,7 +1819,7 @@ Generator.prototype.getFullPlace = function () {
                         }
 
                         _context7.next = 7;
-                        return formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain);
+                        return formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain, self.excludedKeys);
 
                     case 7:
                         formatS = _context7.sent;

@@ -15,22 +15,24 @@ function parsePlaceId(res) {
  * @param store
  * @returns {*}
  */
-async function getPlaceId(name, location, type, radius, cache, googleKey) {
+async function getPlaceId(name, location, types, radius, cache, googleKey) {
     if (!name || !location) {
         return Promise.reject(new Error('name and location are both required to fetch place id'));
     }
-    const cacheKey = `placeId-${name}-${JSON.stringify(location)}`;
-    const cacheData = await cache.getItem(cacheKey);
-    if (cacheData && cacheData !== {}) {
-        logger.info(`Using placeId cache: '${location}'`);
-        return cacheData;
-    }
+
     // logger.info(`Fetching placeId by name='${name}' and location=${JSON.stringify(location)}`);
     const query = {
         location: `${location.lat},${location.lng}`,
         name,
         radius: radius || '500',
-        key: googleKey
+        key: googleKey,
+        type: types[0] || types
+    }
+    const cacheKey = `placeId-${JSON.stringify(Object.assign({},query,{key:null}))}`;
+    const cacheData = await cache.getItem(cacheKey);
+    if (cacheData && cacheData !== {}) {
+        logger.info(`Using placeId cache: '${location}'`);
+        return cacheData;
     }
     if (type) {
         if (type.indexOf('|') !== -1) {

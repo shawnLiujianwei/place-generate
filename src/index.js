@@ -40,7 +40,7 @@ const checkOptions = (options) => {
 };
 
 const defaultOption = {
-    placeTypes: 'store|convenience_store|gas_station|grocery_or_supermarket|food|restaurant|establishment',
+    placeTypes: ['store'],
     queryRadius: 500, //meters
     redis: {
         host: 'localhost',

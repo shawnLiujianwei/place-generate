@@ -1433,9 +1433,17 @@ var Generator = function Generator(options, timezoneId) {
                 data: self.config.placeId
             };
         }
-        if (options.timezone || timezoneId) self.timezone = {
-            timeZoneId: options.timezone || timezoneId
-        };
+        if (options.timezone) {
+            self.timezone = {
+                data: options.timezone
+            };
+        } else if (timezoneId) {
+            self.timezone = {
+                data: {
+                    timeZoneId: timezoneId
+                }
+            };
+        }
     };
     this.init();
     this.locale = self.config.locale;

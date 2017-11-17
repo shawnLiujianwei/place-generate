@@ -133,9 +133,17 @@ const Generator = function (options, timezoneId) {
                 data: self.config.placeId
             };
         }
-        if (options.timezone || timezoneId) self.timezone = {
-            timeZoneId: options.timezone || timezoneId
-        };
+        if (options.timezone) {
+            self.timezone = {
+                data: options.timezone
+            };
+        } else if (timezoneId) {
+            self.timezone = {
+                data: {
+                    timeZoneId: timezoneId
+                }
+            }
+        }
     };
     this.init();
     this.locale = self.config.locale;
@@ -188,7 +196,7 @@ Generator.prototype.getPlaceCountry = async function () {
     }
     const response = await self.getPlaceId();
     const placeDetails = await  fetchPlaceDetails(response.data, 'en_us', self.redisCache, self.config.googleAPIKey);
-    if(placeDetails && placeDetails.data) {
+    if (placeDetails && placeDetails.data) {
         const country = getCountry(placeDetails.data.result.formatted_address);
         self.placeCountry = country;
     }
@@ -286,7 +294,7 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
     // }
     const response = await self.getPlaceDetails();
     if (response.data) {
-        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain,self.excludedKeys);
+        const formatS = await formatStore(response.data, retailerId || self.retailerId, self.locale, self.filterDomain, self.excludedKeys);
         if (formatS.error) {
             return {
                 error: formatS.error

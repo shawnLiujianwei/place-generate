@@ -22,7 +22,7 @@ async function getLocation(address, cache, googleAPIKey) {
     const cacheKey = `geocode_${address}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
-        logger.info(`Using geocode cache: ${address}`);
+        logger.debug(`Using geocode cache: ${address}`);
         return cacheData;
     }
     const url = apiURL.location();

@@ -37,7 +37,7 @@ async function searchPlace(name, location, types, radius, cache, googleKey) {
     const cacheKey = `radarsearch-${JSON.stringify(Object.assign({},query,{key:null}))}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
-        logger.info(`Using placeId cache: '${location}'`);
+        logger.debug(`Using placeId cache: '${location}'`);
         return cacheData;
     }
     // if (type) {

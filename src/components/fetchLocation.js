@@ -34,7 +34,7 @@ async function getLocation(address, cache, googleKey) {
     const cacheKey = `location_${address}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
-        logger.info(`Using location cache: ${address}`);
+        logger.debug(`Using location cache: ${address}`);
         return cacheData;
     }
     // logger.info(`Fetching  location for: '${address}'`);

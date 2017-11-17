@@ -321,7 +321,7 @@ var getLocation = function () {
                             break;
                         }
 
-                        logger.info('Using location cache: ' + address);
+                        logger.debug('Using location cache: ' + address);
                         return _context.abrupt('return', cacheData);
 
                     case 9:
@@ -525,7 +525,7 @@ var getDetails = function () {
                             break;
                         }
 
-                        logger.info('Using details cache: ' + placeId);
+                        logger.debug('Using details cache: ' + placeId);
                         return _context.abrupt('return', cacheData);
 
                     case 10:
@@ -714,7 +714,7 @@ var getPlaceId = function () {
                             break;
                         }
 
-                        logger.info('Using placeId cache: \'' + location + '\'');
+                        logger.debug('Using placeId cache: \'' + location + '\'');
                         return _context.abrupt('return', cacheData);
 
                     case 10:
@@ -895,7 +895,7 @@ var getTimezone = function () {
                             break;
                         }
 
-                        logger.info('Using timezone cache:', geoLocation);
+                        logger.debug('Using timezone cache:', geoLocation);
                         return _context.abrupt('return', cacheData);
 
                     case 11:
@@ -1160,7 +1160,7 @@ var searchPlace = function () {
                             break;
                         }
 
-                        logger.info('Using placeId cache: \'' + location + '\'');
+                        logger.debug('Using placeId cache: \'' + location + '\'');
                         return _context.abrupt('return', cacheData);
 
                     case 10:

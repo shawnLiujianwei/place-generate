@@ -18,7 +18,7 @@ async function getTimezone(geoLocation, cache, googleAPIKey) {
     const cacheKey = `timezone_${geoLocation.lat}-${geoLocation.lng}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
-        logger.info(`Using timezone cache:`, geoLocation);
+        logger.debug(`Using timezone cache:`, geoLocation);
         return cacheData;
     }
     // logger.info(`Fetching timezone: `, geoLocation);

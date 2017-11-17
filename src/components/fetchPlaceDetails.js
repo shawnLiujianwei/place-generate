@@ -21,7 +21,7 @@ async function getDetails(placeId, locale, cache, googleKey) {
     const cacheKey = `details_${placeId}_${query.language}`;
     const cacheData = await cache.getItem(cacheKey);
     if (cacheData && cacheData !== {}) {
-        logger.info(`Using details cache: ${placeId}`);
+        logger.debug(`Using details cache: ${placeId}`);
         return cacheData;
     }
     // logger.info(`Fetching details: ${placeId}`);

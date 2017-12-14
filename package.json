@@ -1,43 +1,4 @@
 {
-  "_args": [
-    [
-      "place-generator@^3.0.6",
-      "/Users/shawn/projects/britvic-import-lambda"
-    ]
-  ],
-  "_cnpm_publish_time": 1495244478873,
-  "_from": "place-generator@>=3.0.6 <4.0.0",
-  "_hasShrinkwrap": false,
-  "_id": "place-generator@3.0.7",
-  "_inCache": true,
-  "_installable": true,
-  "_location": "/place-generator",
-  "_nodeVersion": "7.8.0",
-  "_npmOperationalInternal": {
-    "host": "s3://npm-registry-packages",
-    "tmp": "tmp/place-generator-3.0.7.tgz_1495244478647_0.9792014011181891"
-  },
-  "_npmUser": {
-    "email": "shawn.liu@dotter.me",
-    "name": "shawn_ljw"
-  },
-  "_npmVersion": "4.2.0",
-  "_phantomChildren": {},
-  "_requested": {
-    "name": "place-generator",
-    "raw": "place-generator@^3.0.6",
-    "rawSpec": "^3.0.6",
-    "scope": null,
-    "spec": ">=3.0.6 <4.0.0",
-    "type": "range"
-  },
-  "_requiredBy": [
-    "/"
-  ],
-  "_shasum": "584cb284e8493ba80644582d2ca86bc657866c67",
-  "_shrinkwrap": null,
-  "_spec": "place-generator@^3.0.6",
-  "_where": "/Users/shawn/projects/britvic-import-lambda",
   "author": {
     "name": "Shawn Liu"
   },

@@ -34,14 +34,14 @@ async function getPlaceId(name, location, types, radius, cache, googleKey) {
         logger.debug(`Using placeId cache: '${location}'`);
         return cacheData;
     }
-    if (type) {
-        if (type.indexOf('|') !== -1) {
-            query.type = type.split('|')[0];
-        } else {
-
-            query.type = type;
-        }
-    }
+    // if (type) {
+    //     if (type.indexOf('|') !== -1) {
+    //         query.type = type.split('|')[0];
+    //     } else {
+    //
+    //         query.type = type;
+    //     }
+    // }
     const res = await http.get(apiURL.placeId(), {
         qs: query
     })

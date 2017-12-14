@@ -718,39 +718,31 @@ var getPlaceId = function () {
                         return _context.abrupt('return', cacheData);
 
                     case 10:
-                        if (type) {
-                            if (type.indexOf('|') !== -1) {
-                                query.type = type.split('|')[0];
-                            } else {
-
-                                query.type = type;
-                            }
-                        }
-                        _context.next = 13;
+                        _context.next = 12;
                         return http.get(apiURL.placeId(), {
                             qs: query
                         }).then(JSON.parse);
 
-                    case 13:
+                    case 12:
                         res = _context.sent;
                         placeId = parsePlaceId(res);
                         // logger.info(`Fetched placeId :`, placeId);
 
                         if (!placeId) {
-                            _context.next = 19;
+                            _context.next = 18;
                             break;
                         }
 
-                        _context.next = 18;
+                        _context.next = 17;
                         return cache.setItem(cacheKey, placeId);
 
-                    case 18:
+                    case 17:
                         return _context.abrupt('return', placeId);
 
-                    case 19:
+                    case 18:
                         throw new Error('No results from google nearbysearch with name=' + name + ' type=' + (query.type || query.types) + ', location=' + (0, _stringify2.default)(location));
 
-                    case 20:
+                    case 19:
                     case 'end':
                         return _context.stop();
                 }

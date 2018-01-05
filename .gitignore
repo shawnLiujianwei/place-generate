@@ -9,3 +9,4 @@
 /json/*.json
 *.log
 test/index.test.js
+test/t.js

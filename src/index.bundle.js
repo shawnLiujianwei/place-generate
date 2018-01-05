@@ -1514,8 +1514,17 @@ Generator.prototype.getPlaceCountry = (0, _asyncToGenerator3.default)(_regenerat
 
                 case 3:
                     getCountry = function getCountry(formattedAddress) {
-                        var lastSpace = formattedAddress.lastIndexOf(',');
-                        var country = formattedAddress.substring(lastSpace + 1);
+                        var addressArray = formattedAddress.split(',');
+                        var country = '';
+                        do {
+                            country = addressArray.pop();
+                            if (/^[a-zA-Z ]*$/.test(country) || addressArray.length === 0) {
+                                break;
+                            }
+                        } while (true);
+                        // const lastSpace = formattedAddress.lastIndexOf(',');
+                        // const country = formattedAddress.substring(lastSpace + 1);
+                        // if (country.test())
                         if (!country) {
                             throw new Error('failed to extract countr from formatted address: ' + formattedAddress);
                         }

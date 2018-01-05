@@ -182,8 +182,17 @@ Generator.prototype.getPlaceCountry = async function () {
         return self.placeCountry;
     }
     const getCountry = formattedAddress => {
-        const lastSpace = formattedAddress.lastIndexOf(',');
-        const country = formattedAddress.substring(lastSpace + 1);
+        const addressArray = formattedAddress.split(',');
+        let country = '';
+        do {
+            country = addressArray.pop();
+            if (/^[a-zA-Z ]*$/.test(country) || addressArray.length === 0) {
+                break;
+            }
+        } while (true);
+        // const lastSpace = formattedAddress.lastIndexOf(',');
+        // const country = formattedAddress.substring(lastSpace + 1);
+        // if (country.test())
         if (!country) {
             throw new Error(`failed to extract countr from formatted address: ${formattedAddress}`);
         }

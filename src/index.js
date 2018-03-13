@@ -328,6 +328,8 @@ Generator.prototype.getFullPlace = async function (retailerId, timezoneId) {
             const placeCountry = await self.getPlaceCountry();
             self.store.data.country = placeCountry;
         }
+    } else {
+        self.store = response;
     }
 
     return self.store;

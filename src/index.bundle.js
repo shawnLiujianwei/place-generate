@@ -1825,7 +1825,7 @@ Generator.prototype.getFullPlace = function () {
                         response = _context7.sent;
 
                         if (!response.data) {
-                            _context7.next = 24;
+                            _context7.next = 26;
                             break;
                         }
 
@@ -1888,9 +1888,16 @@ Generator.prototype.getFullPlace = function () {
                         self.store.data.country = placeCountry;
 
                     case 24:
+                        _context7.next = 27;
+                        break;
+
+                    case 26:
+                        self.store = response;
+
+                    case 27:
                         return _context7.abrupt('return', self.store);
 
-                    case 25:
+                    case 28:
                     case 'end':
                         return _context7.stop();
                 }
